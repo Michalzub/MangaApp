@@ -1,6 +1,6 @@
 package com.example.mangaapp.network
 
-import com.example.mangaapp.model.MangaResponse
+import com.example.mangaapp.model.mangaModel.MangaResponse
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import retrofit2.Retrofit
 import okhttp3.MediaType.Companion.toMediaType
@@ -22,6 +22,7 @@ interface MangaDexApiService {
     @GET("manga")
     suspend fun getManga(
         @Query("includes[]") includes: List<String>,
+        @Query("contentRating[]") contentRating: List<String>,
         @Query("limit")  limit: Int,
         @Query("offset")  offset: Int
     ): MangaResponse

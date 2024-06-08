@@ -1,4 +1,4 @@
-package com.example.mangaapp.model
+package com.example.mangaapp.model.mangaModel
 
 import kotlinx.serialization.Serializable
 
@@ -7,5 +7,5 @@ data class MangaTag(
     val id: String,
     val type: String,
     val attributes: TagAttributes,
-    val relationships: List<MangaRelationships>
+    val relationships: List<MangaRelationship>
     )

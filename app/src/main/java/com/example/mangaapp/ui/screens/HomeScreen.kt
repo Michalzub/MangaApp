@@ -1,6 +1,7 @@
 package com.example.mangaapp.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,8 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,15 +27,18 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.mangaapp.R
-import com.example.mangaapp.model.Manga
-import com.example.mangaapp.model.MangaAttributes
+import com.example.mangaapp.model.mangaModel.Manga
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 
 
 @Composable
@@ -44,7 +46,8 @@ fun HomeScreen(
     mangaUiState: MangaUiState,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
-    loadMore: () -> Unit
+    loadMore: () -> Unit,
+    onMangaClick: (Manga) -> Unit
 ) {
     when (mangaUiState) {
         is MangaUiState.Loading -> LoadingScreen(modifier = modifier.fillMaxSize())
@@ -80,7 +83,8 @@ fun MangaGridScreen(
         ) {
             mangaCover -> MangaCard(manga = mangaCover,
             onClick = { /*TODO*/ },
-            modifier = modifier.padding(4.dp)
+            modifier = modifier
+                .padding(4.dp)
                 .fillMaxHeight()
                 .aspectRatio(0.7f)
             )
@@ -94,15 +98,16 @@ fun MangaCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card (
+    Box (
         modifier = modifier
-            .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            .clickable { onClick() }
+            .clip(RoundedCornerShape(16.dp))
     ){
 
         val coverName = manga.relationships.find{ it.type == "cover_art"}?.attributes?.fileName
         if(coverName != null) {
             val coverLink = "https://uploads.mangadex.org/covers/${manga.id}/${coverName}.256.jpg"
+
             AsyncImage(
                 model = ImageRequest.Builder(context = LocalContext.current)
                     .data(coverLink)
@@ -114,7 +119,21 @@ fun MangaCard(
                 contentDescription = "cover",
                 modifier = Modifier.fillMaxHeight()
             )
+
         }
+        Box(modifier = Modifier.matchParentSize().background(Brush.verticalGradient(
+            colors = listOf(Color.Transparent, Color.Black),
+            startY = 500f,
+            endY = Float.POSITIVE_INFINITY
+        )))
+        Text(text = manga.attributes.title["en"]?: "",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.align(Alignment.BottomStart).padding(4.dp),
+            maxLines = 2,
+        )
     }
 }
 

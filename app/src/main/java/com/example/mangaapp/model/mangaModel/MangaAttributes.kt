@@ -1,4 +1,4 @@
-package com.example.mangaapp.model
+package com.example.mangaapp.model.mangaModel
 
 import kotlinx.serialization.Serializable
 @Serializable
