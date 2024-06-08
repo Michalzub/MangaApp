@@ -20,11 +20,9 @@ private val retrofit = Retrofit.Builder()
 
 interface MangaDexApiService {
     @GET("manga")
-    suspend fun getManga(@Query("title") title: String): MangaResponse
-}
-
-object MangaDexApi {
-    val retrofitService: MangaDexApiService by lazy {
-        retrofit.create(MangaDexApiService::class.java)
-    }
+    suspend fun getManga(
+        @Query("includes[]") includes: List<String>,
+        @Query("limit")  limit: Int,
+        @Query("offset")  offset: Int
+    ): MangaResponse
 }

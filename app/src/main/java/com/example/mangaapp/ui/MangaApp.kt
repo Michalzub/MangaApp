@@ -17,6 +17,7 @@ import com.example.mangaapp.ui.screens.HomeScreen
 import com.example.mangaapp.ui.screens.HomeScreenViewModel
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -29,19 +30,20 @@ import com.example.mangaapp.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MangaApp() {
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = { MangaAppTopBar(scrollBehavior = scrollBehavior) }
-    ) {
+    ) { paddingValues ->
         Surface(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.padding(paddingValues)
         ) {
-            val homeScreenViewModel: HomeScreenViewModel = viewModel()
+            val homeScreenViewModel: HomeScreenViewModel = viewModel(factory = HomeScreenViewModel.Factory)
             HomeScreen(
                 mangaUiState = homeScreenViewModel.mangaUiState,
                 modifier = Modifier,
-                contentPadding = it
+                contentPadding = paddingValues,
+                loadMore = { homeScreenViewModel.loadMoreManga() }
             )
         }
     }
