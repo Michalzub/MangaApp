@@ -18,9 +18,11 @@ import com.example.mangaapp.ui.screens.HomeScreenViewModel
 
 import androidx.compose.foundation.layout.padding
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.mangaapp.R
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.mangaapp.ui.screens.MangaDetailsScreen
 
 enum class MangaAppScreens() {
@@ -28,53 +30,32 @@ enum class MangaAppScreens() {
     MangaDetailsScreen
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MangaApp() {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { MangaAppTopBar(scrollBehavior = scrollBehavior) }
-    ) { paddingValues ->
-        Surface(
-            modifier = Modifier.padding(paddingValues)
-        ) {
-            val homeScreenViewModel: HomeScreenViewModel = viewModel(factory = HomeScreenViewModel.Factory)
-            val mangaDetailsViewModel: MangaDetailsViewModel = viewModel(factory = MangaDetailsViewModel.provideFactory())
-            NavHost(
-                navController = navController, /*TODO navController*/
-                startDestination = MangaAppScreens.HomeScreen.name,
-                modifier = Modifier.padding(paddingValues)
-            ) {
-                composable(route = MangaAppScreens.HomeScreen.name) {
-                    HomeScreen(
-                        mangaUiState = homeScreenViewModel.mangaUiState,
-                        modifier = Modifier,
-                        contentPadding = paddingValues,
-                        loadMore = { homeScreenViewModel.loadMoreManga() },
-                        onMangaClick = { /*TODO*/ }
-                    )
+fun MangaApp(
+    navController: NavHostController = rememberNavController()
+) {
+    val homeScreenViewModel: HomeScreenViewModel = viewModel(factory = HomeScreenViewModel.Factory)
+    val mangaDetailsViewModel: MangaDetailsViewModel = viewModel(factory = MangaDetailsViewModel.Factory)
+    NavHost(
+        navController = navController,
+        startDestination = MangaAppScreens.HomeScreen.name,
+        modifier = Modifier
+    ) {
+        composable(route = MangaAppScreens.HomeScreen.name) {
+            HomeScreen(
+                mangaUiState = homeScreenViewModel.mangaUiState,
+                modifier = Modifier,
+                loadMore = { homeScreenViewModel.loadMoreManga() },
+                onMangaClick = { manga ->
+                    mangaDetailsViewModel.setManga(manga)
+                    navController.navigate(MangaAppScreens.MangaDetailsScreen.name)
                 }
+            )
+        }
 
-                composable(route = MangaAppScreens.MangaDetailsScreen.name) {
-                    //MangaDetailsScreen(mangaDetailUiState = mangaDetailsViewModel.mangaDetailUiState) /* TODO uncomment when screen done */
-                }
-            }
+        composable(route = MangaAppScreens.MangaDetailsScreen.name) {
+            MangaDetailsScreen(mangaDetailUiState = mangaDetailsViewModel.mangaDetailUiState,
+                onClickBack = {}) /* TODO uncomment when screen done */
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MangaAppTopBar(scrollBehavior: TopAppBarScrollBehavior, modifier: Modifier = Modifier) {
-    CenterAlignedTopAppBar(
-        scrollBehavior = scrollBehavior,
-        title = {
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.headlineSmall,
-            )
-        },
-        modifier = modifier
-    )
 }

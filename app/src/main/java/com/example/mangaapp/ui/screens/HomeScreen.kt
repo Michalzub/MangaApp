@@ -31,16 +31,24 @@ import com.example.mangaapp.model.mangaModel.Manga
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     mangaUiState: MangaUiState,
@@ -49,13 +57,22 @@ fun HomeScreen(
     loadMore: () -> Unit,
     onMangaClick: (Manga) -> Unit
 ) {
-    when (mangaUiState) {
-        is MangaUiState.Loading -> LoadingScreen(modifier = modifier.fillMaxSize())
-        is MangaUiState.Success -> MangaGridScreen(
-            mangaUiState.manga, modifier = modifier.fillMaxWidth(), loadMore = loadMore
-        )
+    val scrollBehavior= TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    Scaffold(
+        topBar = {HomeScreenTopBar("MangaApp", modifier = modifier, scrollBehavior = scrollBehavior)}
+    ) {paddingValues ->
+        Box(
+            modifier = modifier.padding(paddingValues)
+        ) {
+            when (mangaUiState) {
+                is MangaUiState.Loading -> LoadingScreen(modifier = modifier.fillMaxSize())
+                is MangaUiState.Success -> MangaGridScreen(
+                    mangaUiState.manga, modifier = modifier.fillMaxWidth().nestedScroll(scrollBehavior.nestedScrollConnection), loadMore = loadMore, onMangaClick = onMangaClick
+                )
 
-        is MangaUiState.Error -> ErrorScreen( modifier = modifier.fillMaxSize())
+                is MangaUiState.Error -> ErrorScreen( modifier = modifier.fillMaxSize())
+            }
+        }
     }
 }
 
@@ -65,7 +82,8 @@ fun MangaGridScreen(
     modifier: Modifier = Modifier,
     lazyGridState: LazyGridState = rememberLazyGridState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
-    loadMore: () -> Unit
+    loadMore: () -> Unit,
+    onMangaClick: (Manga) -> Unit
 ) {
     val reachedBottom: Boolean by remember { derivedStateOf { lazyGridState.reachedBottom() } }
 
@@ -82,7 +100,7 @@ fun MangaGridScreen(
         items(items = mangaList, key = {manga -> manga.id}
         ) {
             mangaCover -> MangaCard(manga = mangaCover,
-            onClick = { /*TODO*/ },
+            onMangaClick = onMangaClick,
             modifier = modifier
                 .padding(4.dp)
                 .fillMaxHeight()
@@ -95,12 +113,12 @@ fun MangaGridScreen(
 @Composable
 fun MangaCard(
     manga: Manga,
-    onClick: () -> Unit,
+    onMangaClick: (Manga) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box (
         modifier = modifier
-            .clickable { onClick() }
+            .clickable { onMangaClick(manga) }
             .clip(RoundedCornerShape(16.dp))
     ){
 
@@ -121,17 +139,23 @@ fun MangaCard(
             )
 
         }
-        Box(modifier = Modifier.matchParentSize().background(Brush.verticalGradient(
-            colors = listOf(Color.Transparent, Color.Black),
-            startY = 500f,
-            endY = Float.POSITIVE_INFINITY
-        )))
+        Box(modifier = Modifier
+            .matchParentSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color.Transparent, Color.Black),
+                    startY = 500f,
+                    endY = Float.POSITIVE_INFINITY
+                )
+            ))
         Text(text = manga.attributes.title["en"]?: "",
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.align(Alignment.BottomStart).padding(4.dp),
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(4.dp),
             maxLines = 2,
         )
     }
@@ -154,6 +178,25 @@ fun ErrorScreen(modifier: Modifier = Modifier) {
     ) {
         Text(text = "Error", fontSize = 30.sp)
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeScreenTopBar(
+    text: String,
+    scrollBehavior: TopAppBarScrollBehavior,
+    modifier: Modifier = Modifier
+) {
+    CenterAlignedTopAppBar(
+        scrollBehavior = scrollBehavior,
+        title = {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.headlineSmall,
+            )
+        },
+        modifier = modifier
+    )
 }
 
 internal fun LazyGridState.reachedBottom(buffer: Int = 1): Boolean {
