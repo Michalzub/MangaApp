@@ -9,6 +9,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.http.GET
 import retrofit2.http.Query
 import kotlinx.serialization.json.Json
+import retrofit2.http.QueryMap
 
 interface MangaDexApiService {
     @GET("manga")
@@ -16,7 +17,7 @@ interface MangaDexApiService {
         @Query("title") title: String?,
         @Query("includedTags[]") includedTags: List<String>?,
         @Query("excludedTags[]") excludedTags: List<String>?,
-        @Query("order") order: Map<String,String>?,
+        @QueryMap order: Map<String,String>?,
         @Query("includes[]") includes: List<String> = listOf("author", "artist", "cover_art"),
         @Query("contentRating[]") contentRating: List<String> = listOf("safe"),
         @Query("limit")  limit: Int,

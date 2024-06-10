@@ -4,7 +4,7 @@ import MangaDetailsViewModel
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.example.mangaapp.ui.screens.MangaScreen
-import com.example.mangaapp.ui.screens.HomeScreenViewModel
+import com.example.mangaapp.ui.screens.MangaScreenViewModel
 
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -24,13 +24,10 @@ enum class MangaAppScreens() {
 fun MangaApp(
     navController: NavHostController = rememberNavController()
 ) {
-    val homeScreenViewModel: HomeScreenViewModel = viewModel(factory = HomeScreenViewModel.Factory)
+    val mangaScreenViewModel: MangaScreenViewModel = viewModel(factory = MangaScreenViewModel.Factory)
     val mangaDetailsViewModel: MangaDetailsViewModel = viewModel(factory = MangaDetailsViewModel.Factory)
 
     val backStackEntry by navController.currentBackStackEntryAsState()
-
-    val currentScreen = MangaAppScreens.valueOf(
-        backStackEntry?.destination?.route ?: MangaAppScreens.HomeScreen.name)
 
     NavHost(
         navController = navController,
@@ -39,14 +36,17 @@ fun MangaApp(
     ) {
         composable(route = MangaAppScreens.HomeScreen.name) {
             MangaScreen(
-                viewModel = homeScreenViewModel,
+                viewModel = mangaScreenViewModel,
                 modifier = Modifier,
-                loadMore = { homeScreenViewModel.loadMoreManga() },
+                loadMore = {
+                    if (mangaScreenViewModel.mangaSearchState.offset < mangaScreenViewModel.mangaSearchState.total) {
+                        mangaScreenViewModel.loadMoreManga()
+                    }
+                },
                 onMangaClick = { manga ->
                     mangaDetailsViewModel.setManga(manga)
                     navController.navigate(MangaAppScreens.MangaDetailsScreen.name)
                 },
-                onSearchClick = {}
             )
         }
 
@@ -54,6 +54,7 @@ fun MangaApp(
             MangaDetailsScreen(mangaDetailUiState = mangaDetailsViewModel.mangaDetailUiState,
                 onClickBack = {
                     navController.navigateUp()
+                    mangaDetailsViewModel.mangaDetailsLeave()
                 }) /* TODO uncomment when screen done */
         }
     }

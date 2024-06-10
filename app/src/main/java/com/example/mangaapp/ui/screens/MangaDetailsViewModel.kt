@@ -9,8 +9,6 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.mangaapp.MangaApplication
 import com.example.mangaapp.data.MangaDexRepo
 import com.example.mangaapp.model.mangaModel.Manga
-import com.example.mangaapp.ui.screens.HomeScreenViewModel
-import com.example.mangaapp.ui.screens.MangaUiState
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException

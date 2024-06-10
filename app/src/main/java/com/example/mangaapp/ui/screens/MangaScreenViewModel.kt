@@ -1,13 +1,13 @@
 package com.example.mangaapp.ui.screens
 
-import android.nfc.Tag
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.SheetValue
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -24,30 +24,36 @@ import java.io.IOException
 
 sealed interface MangaUiState {
     data class Success(val manga: List<Manga>) : MangaUiState
-    object Error : MangaUiState
-    object Loading : MangaUiState
+    data object Error : MangaUiState
+    data object Loading : MangaUiState
 }
 
-enum class TagState {
+enum class TagSelectionStatus {
     Included,
     Excluded,
     Unselected,
 }
 
-data class TagData(
+data class OrderState(
+    val expanded: Boolean,
+    val list: List<String>,
+    val selectedItem: String,
+    val textFiledSize: Size
+)
+
+data class TagState(
     val mangaTag: MangaTag,
-    var tagState: TagState
+    var tagSelectionStatus: TagSelectionStatus
 )
 
 data class MangaSearchState(
     val isSearching: Boolean,
     val title: String,
-    val tags: MutableMap<String, TagData>,
-    val order: Map<String, String>?,
-    val offset: Int
+    val offset: Int,
+    val total: Int
 )
 
-class HomeScreenViewModel(
+class MangaScreenViewModel(
     private val mangaDexRepo: MangaDexRepo
 ) : ViewModel() {
     /** The mutable State that stores the status of the most recent request */
@@ -55,18 +61,40 @@ class HomeScreenViewModel(
         private set
 
 
-    var mangaSearchState: MangaSearchState by mutableStateOf(MangaSearchState(false,"", mutableMapOf<String, TagData>(),null, 0))
+    var mangaSearchState: MangaSearchState by mutableStateOf(MangaSearchState(false,"", 0, 0))
         private set
     var isSheetOpen: Boolean by mutableStateOf(false)
         private set
 
+    var tagsMapState: Map<String, TagState> by mutableStateOf(mapOf())
+        private set
+
+    var orderState: OrderState by mutableStateOf(OrderState(false, listOf("Latest", "Rating", "Followed"), "Latest", Size.Zero))
+        private set
+
+    fun orderExpandedChange() {
+        orderState = orderState.copy(expanded = !orderState.expanded)
+    }
+
+    fun closeOrderDropdown() {
+        orderState = orderState.copy(expanded = false)
+    }
+
+    fun changeSelectedOrderItem(item: String) {
+        orderState = orderState.copy(selectedItem = item)
+    }
+
+    fun setOrderTextFiledSize(layoutCoordinates: LayoutCoordinates) {
+        orderState = orderState.copy(textFiledSize = layoutCoordinates.size.toSize())
+    }
+
+    fun resetOrderState() {
+        orderState = OrderState(false, listOf("Latest", "Rating", "Followed"), "Latest", Size.Zero )
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     var sheetState: SheetState by mutableStateOf(SheetState(skipPartiallyExpanded = false))
         private set
-    init {
-        getManga()
-        getMangaTags()
-    }
 
     fun openSheet() {
         isSheetOpen = true
@@ -76,37 +104,57 @@ class HomeScreenViewModel(
         isSheetOpen = false
     }
 
+    init {
+        getManga()
+        getMangaTags()
+    }
+
     fun startSearching() {
         mangaSearchState = mangaSearchState.copy(isSearching = true)
     }
+    fun stopSearching() {
+        mangaSearchState = mangaSearchState.copy(isSearching = false)
+    }
 
-    fun cycleTagInclusion(tag: String?) {
-        mangaSearchState.tags.let {
-            if(tag != null && mangaSearchState.tags[tag] != null) {
-                when (mangaSearchState.tags[tag]!!.tagState) {
-                    TagState.Included -> it[tag]!!.tagState = TagState.Excluded
-                    TagState.Excluded -> it[tag]!!.tagState = TagState.Unselected
-                    TagState.Unselected -> it[tag]!!.tagState = TagState.Included
-                }
+    fun search() {
+        getManga()
+    }
+
+    fun changeTitleQuery(title: String) {
+        mangaSearchState = mangaSearchState.copy(title = title)
+    }
+
+    fun cycleTagSelectionStatus(tag: String?) {
+        if(tag != null && tagsMapState[tag] != null) {
+            val tempTags = tagsMapState.toMutableMap()
+            when (tempTags[tag]?.tagSelectionStatus) {
+                TagSelectionStatus.Included -> tempTags[tag]!!.tagSelectionStatus = TagSelectionStatus.Excluded
+                TagSelectionStatus.Excluded -> tempTags[tag]!!.tagSelectionStatus = TagSelectionStatus.Unselected
+                TagSelectionStatus.Unselected -> tempTags[tag]!!.tagSelectionStatus = TagSelectionStatus.Included
+                else -> {}
             }
+            tagsMapState = tempTags.toMap()
         }
     }
 
     fun resetSearchState() {
-        for(tag in mangaSearchState.tags) {
-            tag.component2().tagState = TagState.Unselected
+        val tempTags = tagsMapState
+        for(tag in tempTags) {
+            tag.component2().tagSelectionStatus = TagSelectionStatus.Unselected
         }
-        mangaSearchState = MangaSearchState(false, "", mangaSearchState.tags, null, 0)
+        tagsMapState = tempTags
     }
 
-    fun getMangaTags() {
+    private fun getMangaTags() {
         viewModelScope.launch {
+            val tempTags = tagsMapState.toMutableMap()
             for(tag in mangaDexRepo.getMangaTags().data) {
                 val tagName = tag.attributes.name["en"]
                 if(tagName != null) {
-                    mangaSearchState.tags[tagName] = TagData(tag, TagState.Unselected)
+                    tempTags[tagName] = TagState(tag, TagSelectionStatus.Unselected)
                 }
             }
+            tagsMapState = tempTags
         }
     }
 
@@ -114,36 +162,35 @@ class HomeScreenViewModel(
         viewModelScope.launch {
             val includedTags = mutableListOf<String>()
             val excludedTags = mutableListOf<String>()
-            for(tag in mangaSearchState.tags) {
-                if(tag.component2().tagState == TagState.Included) {
+            for(tag in tagsMapState) {
+                if(tag.component2().tagSelectionStatus == TagSelectionStatus.Included) {
                     includedTags.add(tag.component2().mangaTag.id)
-                } else if( tag.component2().tagState == TagState.Excluded) {
+                } else if( tag.component2().tagSelectionStatus == TagSelectionStatus.Excluded) {
                     excludedTags.add(tag.component2().mangaTag.id)
                 }
             }
 
-
             when(val currentState = mangaUiState) {
                 is MangaUiState.Success -> {
                     val updatedMangaList = currentState.manga.toMutableList()
-                    for(manga in mangaDexRepo.getManga(
+                    val response = mangaDexRepo.getManga(
                         title = if(mangaSearchState.title == "") {
-                                null
-                            } else {
-                                mangaSearchState.title
-                            },
-                            includedTags = includedTags,
-                            excludedTags = excludedTags,
-                            order = mangaSearchState.order,
-                            offset = mangaSearchState.offset
-                        ).data
+                            null
+                        } else {
+                            mangaSearchState.title
+                        },
+                        includedTags = includedTags,
+                        excludedTags = excludedTags,
+                        order = getOrderQuery(),
+                        offset = mangaSearchState.offset
                     )
+                    for(manga in response.data)
                     {
                         if(!updatedMangaList.any {it.id == manga.id}) {
                             updatedMangaList.add(manga)
                         }
                     }
-                    mangaSearchState = mangaSearchState.copy(offset = mangaSearchState.offset + updatedMangaList.size)
+                    mangaSearchState = mangaSearchState.copy(offset = mangaSearchState.offset + response.limit)
                     mangaUiState = MangaUiState.Success(updatedMangaList)
                 }
                 else -> {
@@ -152,34 +199,34 @@ class HomeScreenViewModel(
             }
         }
     }
-    fun getManga() {
+    private fun getManga() {
         viewModelScope.launch {
+            mangaUiState = MangaUiState.Loading
             val includedTags = mutableListOf<String>()
             val excludedTags = mutableListOf<String>()
-            for(tag in mangaSearchState.tags) {
-                if(tag.component2().tagState == TagState.Included) {
+
+            for(tag in tagsMapState) {
+                if(tag.component2().tagSelectionStatus == TagSelectionStatus.Included) {
                     includedTags.add(tag.component2().mangaTag.id)
-                } else if( tag.component2().tagState == TagState.Excluded) {
+                } else if( tag.component2().tagSelectionStatus == TagSelectionStatus.Excluded) {
                     excludedTags.add(tag.component2().mangaTag.id)
                 }
             }
-
-            mangaUiState = try {
-                val tempState = MangaUiState.Success(
-                    mangaDexRepo.getManga(
-                        title = if(mangaSearchState.title == "") {
-                            null
-                        } else {
-                            mangaSearchState.title
-                        },
-                        includedTags = includedTags,
-                        excludedTags = excludedTags,
-                        order = mangaSearchState.order,
-                        offset = 0
-                    ).data
+            try {
+                val response = mangaDexRepo.getManga(
+                    title = if(mangaSearchState.title == "") {
+                        null
+                    } else {
+                        mangaSearchState.title
+                    },
+                    includedTags = includedTags,
+                    excludedTags = excludedTags,
+                    order =  getOrderQuery(),
+                    offset = 0
                 )
-                mangaSearchState = mangaSearchState.copy(offset = 20)
-                tempState
+                    mangaUiState = MangaUiState.Success(response.data)
+                    mangaSearchState = mangaSearchState.copy(offset = 20, total = response.total)
+
             } catch (e: IOException) {
                 MangaUiState.Error
             } catch (e: HttpException) {
@@ -189,12 +236,30 @@ class HomeScreenViewModel(
         }
     }
 
+    private fun getOrderQuery(): Map<String, String> {
+        return when(orderState.selectedItem) {
+            "Latest" -> {
+                mapOf("order[latestUploadedChapter]" to "desc")
+            }
+
+            "Rating" -> {
+                mapOf("order[rating]" to "desc")
+            }
+            "Followed" -> {
+                mapOf("order[followedCount]" to "desc")
+            }
+            else -> {
+                mapOf("order[latestUploadedChapter]" to "desc")
+            }
+        }
+    }
+
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application = (this[APPLICATION_KEY] as MangaApplication)
                 val mangaDexRepo = application.container.mangaDexRepo
-                HomeScreenViewModel(mangaDexRepo = mangaDexRepo)
+                MangaScreenViewModel(mangaDexRepo = mangaDexRepo)
             }
         }
     }

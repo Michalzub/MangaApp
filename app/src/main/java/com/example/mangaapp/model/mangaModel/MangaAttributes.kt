@@ -17,7 +17,7 @@ data class MangaAttributes(
     val contentRating: String,
     val chapterNumbersResetOnNewVolume: Boolean,
     val availableTranslatedLanguages: List<String?>,
-    val latestUploadedChapter: String,
+    val latestUploadedChapter: String?,
     val tags: List<MangaTag>,
     val state: String,
     val version: Int,
