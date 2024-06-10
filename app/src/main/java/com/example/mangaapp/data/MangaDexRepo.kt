@@ -1,17 +1,38 @@
 package com.example.mangaapp.data
 
 import com.example.mangaapp.model.mangaModel.MangaResponse
+import com.example.mangaapp.model.mangaModel.MangaTagResponse
 import com.example.mangaapp.network.MangaDexApiService
 
 interface MangaDexRepo {
-    suspend fun getManga(offset: Int): MangaResponse
+    suspend fun getManga(
+        title: String?,
+        includedTags: List<String>?,
+        excludedTags: List<String>?,
+        order: Map<String, String>?,
+        offset: Int
+    ): MangaResponse
+
+    suspend fun getMangaTags(): MangaTagResponse
 }
 
 class NetworkMangaDexRepo(
     private val mangaDexApiService: MangaDexApiService
 ): MangaDexRepo {
-    private val includes = listOf("author", "artist", "cover_art")
-    private val contentRating = listOf("safe")
-    override suspend fun getManga(offset: Int): MangaResponse = mangaDexApiService.getManga(includes, contentRating, 20, offset)
 
+    override suspend fun getManga(title: String?,
+                                  includedTags: List<String>?,
+                                  excludedTags: List<String>?,
+                                  order: Map<String, String>?,
+                                  offset: Int
+    ): MangaResponse = mangaDexApiService.getManga(
+        title = title,
+        includedTags = includedTags,
+        excludedTags = excludedTags,
+        order = order,
+        limit = 20,
+        offset = offset
+    )
+
+    override suspend fun getMangaTags(): MangaTagResponse = mangaDexApiService.getTags()
 }

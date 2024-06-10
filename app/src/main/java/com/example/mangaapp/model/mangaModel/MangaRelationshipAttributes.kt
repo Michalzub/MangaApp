@@ -7,6 +7,7 @@ data class MangaRelationshipAttributes(
     val description: String? = null,
     val volume: String? = null,
     val fileName: String? = null,
+    val name: String? = null,
     val locale: String? = null,
     val createdAt: String,
     val updatedAt: String,
