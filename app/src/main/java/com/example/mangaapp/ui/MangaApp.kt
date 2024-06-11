@@ -51,7 +51,7 @@ fun MangaApp(
         }
 
         composable(route = MangaAppScreens.MangaDetailsScreen.name) {
-            MangaDetailsScreen(mangaDetailUiState = mangaDetailsViewModel.mangaDetailUiState,
+            MangaDetailsScreen(mangaDetailsViewModel = mangaDetailsViewModel,
                 onClickBack = {
                     navController.navigateUp()
                     mangaDetailsViewModel.mangaDetailsLeave()

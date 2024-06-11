@@ -7,6 +7,6 @@ import kotlinx.serialization.Serializable
 data class ChapterRelationship(
     val id: String,
     val type: String,
-    val related: String,
-    val attributes: MangaRelationshipAttributes
+    val related: String? = null,
+    val attributes: MangaRelationshipAttributes? = null
 )

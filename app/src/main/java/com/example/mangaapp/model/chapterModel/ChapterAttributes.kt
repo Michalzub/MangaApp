@@ -4,13 +4,13 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ChapterAttributes(
-    val title: String,
-    val volume: String,
-    val chapter: String,
+    val title: String? = null,
+    val volume: String? = null,
+    val chapter: String? = null,
     val pages: Int,
-    val translatedLanguage: String,
-    val uploader: String,
-    val externalUrl: String,
+    val translatedLanguage: String? = null,
+    val uploader: String? = null,
+    val externalUrl: String? = null,
     val version: Int,
     val createdAt: String,
     val updatedAt: String,

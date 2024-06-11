@@ -1,8 +1,10 @@
 package com.example.mangaapp.ui.screens
 
 import MangaDetailUiState
+import MangaDetailsViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -48,13 +51,14 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.mangaapp.R
+import com.example.mangaapp.model.chapterModel.Chapter
 import com.example.mangaapp.model.mangaModel.Manga
 import com.example.mangaapp.model.mangaModel.MangaTag
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MangaDetailsScreen(
-    mangaDetailUiState: MangaDetailUiState,
+    mangaDetailsViewModel: MangaDetailsViewModel,
     onClickBack: () -> Unit,
     modifier: Modifier = Modifier,
     backgroundColor: Color = Color.Black,
@@ -67,15 +71,16 @@ fun MangaDetailsScreen(
             .background(backgroundColor)
             .padding(innerValues)
             .nestedScroll(scrollBehavior.nestedScrollConnection)) {
-            when (mangaDetailUiState) {
+            when (val currentState = mangaDetailsViewModel.mangaDetailUiState) {
                 is MangaDetailUiState.Loading -> {
                     LoadingScreen(modifier = modifier.fillMaxSize())
                 }
                 is MangaDetailUiState.Success -> {
                     MangaDetails(
-                        manga = mangaDetailUiState.manga,
+                        manga = currentState.manga,
                         modifier = Modifier.fillMaxSize(),
-                        backgroundColor = backgroundColor
+                        backgroundColor = backgroundColor,
+                        chapterList = currentState.chapters
                     )
                 }
                 is MangaDetailUiState.Error -> {
@@ -92,6 +97,7 @@ fun MangaDetailsScreen(
 @Composable
 fun MangaDetails(
     manga: Manga,
+    chapterList: List<Chapter>,
     modifier: Modifier = Modifier,
     backgroundColor: Color
 ) {
@@ -100,6 +106,27 @@ fun MangaDetails(
     ) {
         item{ DetailsHeader(manga = manga, modifier = modifier, backgroundColor = backgroundColor) }
         item{ TagList(manga.attributes.tags, backgroundColor = backgroundColor) }
+        item { Row(
+            modifier = Modifier.height(50.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = "Total chapters: ${chapterList.size}",
+                fontSize = 25.sp,
+                color = Color.White
+            )
+        } }
+        items(chapterList) {
+            chapter ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp)
+                    .clickable { },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "Chapter ${chapter.attributes.chapter}", fontSize = 20.sp, color = Color.White, modifier = Modifier.padding(start = 5.dp))
+            }
+        }
     }
 }
 

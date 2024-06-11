@@ -8,13 +8,15 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.mangaapp.MangaApplication
 import com.example.mangaapp.data.MangaDexRepo
+import com.example.mangaapp.model.chapterModel.Chapter
 import com.example.mangaapp.model.mangaModel.Manga
+import com.example.mangaapp.ui.screens.MangaUiState
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 
 sealed interface MangaDetailUiState {
-    data class Success(val manga: Manga, val chapterDetails: String): MangaDetailUiState
+    data class Success(val manga: Manga, val chapters: List<Chapter>, val offset: Int): MangaDetailUiState
     object Error : MangaDetailUiState
     object Loading : MangaDetailUiState
 }
@@ -31,31 +33,41 @@ class MangaDetailsViewModel(
     }
 
     fun setManga(manga: Manga) {
-        mangaDetailUiState = MangaDetailUiState.Success(manga, "")
+        mangaDetailUiState = MangaDetailUiState.Success(manga, getChapterList(manga), 0)
     }
     fun mangaDetailsLeave() {
         mangaDetailUiState = MangaDetailUiState.Loading
     }
 
-    private fun loadMangaDetails() {
-        when(val currentState = mangaDetailUiState) {
-            is MangaDetailUiState.Success -> {
-                viewModelScope.launch {
-                    mangaDetailUiState = try {
-                        val tempState = MangaDetailUiState.Success(manga = currentState.manga, chapterDetails = "TODO")
-                        tempState
-                    } catch (e: IOException) {
-                        MangaDetailUiState.Error
-                    } catch (e: HttpException) {
-                        MangaDetailUiState.Error
+    private fun getChapterList(manga: Manga): List<Chapter> {
+        var loadingOffset = 0
+        val tempList = mutableListOf<Chapter>()
+        viewModelScope.launch {
+            try {
+                val alreadyLoaded = mutableMapOf<String, Boolean>()
+                do {
+                    val response = mangaDexRepo.getChapters(
+                        id = manga.id,
+                        limit = 500,
+                        offset = loadingOffset
+                    )
+
+                    for(chapter in response.data) {
+                        if(chapter.attributes.chapter != null && alreadyLoaded[chapter.attributes.chapter] == null) {
+                            alreadyLoaded[chapter.attributes.chapter] = true
+                            tempList.add(chapter)
+                        }
                     }
-                }
-            }
-            else -> {
-                MangaDetailUiState.Error
+                    loadingOffset += 500
+                } while (loadingOffset < response.total)
+                tempList.sortBy { chapter -> (chapter.attributes.chapter)!!.toDouble() }
+            } catch (e: IOException) {
+                MangaUiState.Error
+            } catch (e: HttpException) {
+                MangaUiState.Error
             }
         }
-
+        return tempList
     }
 
     companion object {

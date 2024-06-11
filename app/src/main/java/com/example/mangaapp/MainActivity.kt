@@ -11,6 +11,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.example.mangaapp.ui.MangaApp
+import com.example.mangaapp.ui.screens.ChapterReaderScreen
 import com.example.mangaapp.ui.theme.MangaAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,9 +21,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             MangaAppTheme {
                 Box(
-                    modifier = Modifier.fillMaxSize().background(Color.Black)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black)
                 ) {
-                    MangaApp()
+                    ChapterReaderScreen()
+                    //MangaApp()
                 }
             }
         }

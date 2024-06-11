@@ -1,5 +1,6 @@
 package com.example.mangaapp.network
 
+import com.example.mangaapp.model.chapterModel.ChapterResponse
 import com.example.mangaapp.model.mangaModel.MangaResponse
 import com.example.mangaapp.model.mangaModel.MangaTag
 import com.example.mangaapp.model.mangaModel.MangaTagResponse
@@ -9,6 +10,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.http.GET
 import retrofit2.http.Query
 import kotlinx.serialization.json.Json
+import retrofit2.http.Path
 import retrofit2.http.QueryMap
 
 interface MangaDexApiService {
@@ -26,4 +28,12 @@ interface MangaDexApiService {
 
     @GET("manga/tag")
     suspend fun getTags(): MangaTagResponse
+
+    @GET("manga/{id}/feed")
+    suspend fun getChapters(
+        @Path("id") id: String,
+        @Query("translatedLanguage[]") translatedLanguage: List<String> = listOf("en"),
+        @Query("limit") limit: Int,
+        @Query("offset") offset: Int
+    ): ChapterResponse
 }
