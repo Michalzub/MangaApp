@@ -16,7 +16,7 @@ import retrofit2.HttpException
 import java.io.IOException
 
 sealed interface MangaDetailUiState {
-    data class Success(val manga: Manga, val chapters: List<Chapter>, val offset: Int): MangaDetailUiState
+    data class Success(val manga: Manga, val chapters: List<Chapter>): MangaDetailUiState
     object Error : MangaDetailUiState
     object Loading : MangaDetailUiState
 }
@@ -32,14 +32,11 @@ class MangaDetailsViewModel(
         mangaDetailUiState = MangaDetailUiState.Loading
     }
 
-    fun setManga(manga: Manga) {
-        mangaDetailUiState = MangaDetailUiState.Success(manga, getChapterList(manga), 0)
-    }
     fun mangaDetailsLeave() {
         mangaDetailUiState = MangaDetailUiState.Loading
     }
 
-    private fun getChapterList(manga: Manga): List<Chapter> {
+    fun loadMangaDetails(manga: Manga) {
         var loadingOffset = 0
         val tempList = mutableListOf<Chapter>()
         viewModelScope.launch {
@@ -61,13 +58,13 @@ class MangaDetailsViewModel(
                     loadingOffset += 500
                 } while (loadingOffset < response.total)
                 tempList.sortBy { chapter -> (chapter.attributes.chapter)!!.toDouble() }
+                mangaDetailUiState = MangaDetailUiState.Success(manga = manga, chapters = tempList)
             } catch (e: IOException) {
-                MangaUiState.Error
+                mangaDetailUiState = MangaDetailUiState.Error
             } catch (e: HttpException) {
-                MangaUiState.Error
+                mangaDetailUiState = MangaDetailUiState.Error
             }
         }
-        return tempList
     }
 
     companion object {

@@ -60,6 +60,7 @@ import com.example.mangaapp.model.mangaModel.MangaTag
 fun MangaDetailsScreen(
     mangaDetailsViewModel: MangaDetailsViewModel,
     onClickBack: () -> Unit,
+    onChapterClick: (Chapter) -> Unit,
     modifier: Modifier = Modifier,
     backgroundColor: Color = Color.Black,
 ) {
@@ -80,7 +81,8 @@ fun MangaDetailsScreen(
                         manga = currentState.manga,
                         modifier = Modifier.fillMaxSize(),
                         backgroundColor = backgroundColor,
-                        chapterList = currentState.chapters
+                        chapterList = currentState.chapters,
+                        onChapterClick = onChapterClick
                     )
                 }
                 is MangaDetailUiState.Error -> {
@@ -98,6 +100,7 @@ fun MangaDetailsScreen(
 fun MangaDetails(
     manga: Manga,
     chapterList: List<Chapter>,
+    onChapterClick: (Chapter) -> Unit,
     modifier: Modifier = Modifier,
     backgroundColor: Color
 ) {
@@ -121,7 +124,7 @@ fun MangaDetails(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(40.dp)
-                    .clickable { },
+                    .clickable { onChapterClick(chapter) },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(text = "Chapter ${chapter.attributes.chapter}", fontSize = 20.sp, color = Color.White, modifier = Modifier.padding(start = 5.dp))

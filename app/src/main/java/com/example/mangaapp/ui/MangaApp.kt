@@ -13,11 +13,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.mangaapp.ui.screens.ChapterReaderScreen
+import com.example.mangaapp.ui.screens.ChapterReaderUiState
+import com.example.mangaapp.ui.screens.ChapterReaderViewModel
 import com.example.mangaapp.ui.screens.MangaDetailsScreen
 
 enum class MangaAppScreens() {
     HomeScreen,
-    MangaDetailsScreen
+    MangaDetailsScreen,
+    ChapterReaderScreen
 }
 
 @Composable
@@ -26,8 +30,7 @@ fun MangaApp(
 ) {
     val mangaScreenViewModel: MangaScreenViewModel = viewModel(factory = MangaScreenViewModel.Factory)
     val mangaDetailsViewModel: MangaDetailsViewModel = viewModel(factory = MangaDetailsViewModel.Factory)
-
-    val backStackEntry by navController.currentBackStackEntryAsState()
+    val chapterReaderViewModel: ChapterReaderViewModel = viewModel(factory = ChapterReaderViewModel.Factory)
 
     NavHost(
         navController = navController,
@@ -44,7 +47,7 @@ fun MangaApp(
                     }
                 },
                 onMangaClick = { manga ->
-                    mangaDetailsViewModel.setManga(manga)
+                    mangaDetailsViewModel.loadMangaDetails(manga)
                     navController.navigate(MangaAppScreens.MangaDetailsScreen.name)
                 },
             )
@@ -55,7 +58,24 @@ fun MangaApp(
                 onClickBack = {
                     navController.navigateUp()
                     mangaDetailsViewModel.mangaDetailsLeave()
-                }) /* TODO uncomment when screen done */
+                },
+                onChapterClick = { chapter ->
+                    chapterReaderViewModel.loadChapterImageLinks(chapter)
+                    navController.navigate(MangaAppScreens.ChapterReaderScreen.name)
+
+                }
+            ) /* TODO uncomment when screen done */
+        }
+
+        composable(route = MangaAppScreens.ChapterReaderScreen.name) {
+            ChapterReaderScreen(
+                onClickBack = {
+                    navController.navigateUp()
+                },
+                viewModel = chapterReaderViewModel,
+                isHorizontal = chapterReaderViewModel.isHorizontal,
+                onReadingModeChange = { chapterReaderViewModel.changeReadingMode() }
+            )
         }
     }
 }

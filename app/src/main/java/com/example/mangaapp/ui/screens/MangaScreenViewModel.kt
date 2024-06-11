@@ -234,9 +234,9 @@ class MangaScreenViewModel(
                     mangaSearchState = mangaSearchState.copy(offset = 20, total = response.total)
 
             } catch (e: IOException) {
-                MangaUiState.Error
+                mangaUiState = MangaUiState.Error
             } catch (e: HttpException) {
-                MangaUiState.Error
+                mangaUiState = MangaUiState.Error
             }
 
         }

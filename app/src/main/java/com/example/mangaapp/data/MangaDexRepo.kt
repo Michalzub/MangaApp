@@ -1,5 +1,6 @@
 package com.example.mangaapp.data
 
+import com.example.mangaapp.model.chapterModel.ChapterImageResponse
 import com.example.mangaapp.model.chapterModel.ChapterResponse
 import com.example.mangaapp.model.mangaModel.MangaResponse
 import com.example.mangaapp.model.mangaModel.MangaTagResponse
@@ -21,6 +22,10 @@ interface MangaDexRepo {
         limit: Int,
         offset: Int
     ): ChapterResponse
+
+    suspend fun getChapterImages(
+        id: String
+    ): ChapterImageResponse
 }
 
 class NetworkMangaDexRepo(
@@ -48,4 +53,6 @@ class NetworkMangaDexRepo(
         limit = limit,
         offset = offset
     )
+
+    override suspend fun getChapterImages(id: String): ChapterImageResponse = mangaDexApiService.getChapterImages(id)
 }

@@ -1,5 +1,6 @@
 package com.example.mangaapp.network
 
+import com.example.mangaapp.model.chapterModel.ChapterImageResponse
 import com.example.mangaapp.model.chapterModel.ChapterResponse
 import com.example.mangaapp.model.mangaModel.MangaResponse
 import com.example.mangaapp.model.mangaModel.MangaTag
@@ -36,4 +37,9 @@ interface MangaDexApiService {
         @Query("limit") limit: Int,
         @Query("offset") offset: Int
     ): ChapterResponse
+
+    @GET("/at-home/server/{id}")
+    suspend fun getChapterImages(
+        @Path("id") chapterId: String,
+    ): ChapterImageResponse
 }

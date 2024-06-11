@@ -25,8 +25,7 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(Color.Black)
                 ) {
-                    ChapterReaderScreen()
-                    //MangaApp()
+                    MangaApp()
                 }
             }
         }
