@@ -18,6 +18,7 @@ import com.example.mangaapp.MangaApplication
 import com.example.mangaapp.data.MangaDexRepo
 import com.example.mangaapp.model.mangaModel.Manga
 import com.example.mangaapp.model.mangaModel.MangaTag
+import com.example.mangaapp.model.mangaModel.TagAttributes
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
@@ -33,6 +34,11 @@ enum class TagSelectionStatus {
     Excluded,
     Unselected,
 }
+
+data class TagChange(
+    val change: Boolean,
+    val tagsMapState: Map<String, TagState>
+)
 
 data class OrderState(
     val expanded: Boolean,
@@ -66,7 +72,7 @@ class MangaScreenViewModel(
     var isSheetOpen: Boolean by mutableStateOf(false)
         private set
 
-    var tagsMapState: Map<String, TagState> by mutableStateOf(mapOf())
+    var tagChange: TagChange by mutableStateOf(TagChange(false, mapOf()))
         private set
 
     var orderState: OrderState by mutableStateOf(OrderState(false, listOf("Latest", "Rating", "Followed"), "Latest", Size.Zero))
@@ -125,36 +131,36 @@ class MangaScreenViewModel(
     }
 
     fun cycleTagSelectionStatus(tag: String?) {
-        if(tag != null && tagsMapState[tag] != null) {
-            val tempTags = tagsMapState.toMutableMap()
+        if(tag != null && tagChange.tagsMapState[tag] != null) {
+            val tempTags = tagChange.tagsMapState.toMutableMap()
             when (tempTags[tag]?.tagSelectionStatus) {
                 TagSelectionStatus.Included -> tempTags[tag]!!.tagSelectionStatus = TagSelectionStatus.Excluded
                 TagSelectionStatus.Excluded -> tempTags[tag]!!.tagSelectionStatus = TagSelectionStatus.Unselected
                 TagSelectionStatus.Unselected -> tempTags[tag]!!.tagSelectionStatus = TagSelectionStatus.Included
                 else -> {}
             }
-            tagsMapState = tempTags.toMap()
+            tagChange = tagChange.copy(change = !tagChange.change, tagsMapState = tempTags)
         }
     }
 
     fun resetSearchState() {
-        val tempTags = tagsMapState
+        val tempTags = tagChange.tagsMapState
         for(tag in tempTags) {
             tag.component2().tagSelectionStatus = TagSelectionStatus.Unselected
         }
-        tagsMapState = tempTags
+        tagChange = tagChange.copy(tagsMapState = tempTags)
     }
 
     private fun getMangaTags() {
         viewModelScope.launch {
-            val tempTags = tagsMapState.toMutableMap()
+            val tempTags = tagChange.tagsMapState.toMutableMap()
             for(tag in mangaDexRepo.getMangaTags().data) {
                 val tagName = tag.attributes.name["en"]
                 if(tagName != null) {
                     tempTags[tagName] = TagState(tag, TagSelectionStatus.Unselected)
                 }
             }
-            tagsMapState = tempTags
+            tagChange = tagChange.copy(tagsMapState = tempTags)
         }
     }
 
@@ -162,7 +168,7 @@ class MangaScreenViewModel(
         viewModelScope.launch {
             val includedTags = mutableListOf<String>()
             val excludedTags = mutableListOf<String>()
-            for(tag in tagsMapState) {
+            for(tag in tagChange.tagsMapState) {
                 if(tag.component2().tagSelectionStatus == TagSelectionStatus.Included) {
                     includedTags.add(tag.component2().mangaTag.id)
                 } else if( tag.component2().tagSelectionStatus == TagSelectionStatus.Excluded) {
@@ -205,7 +211,7 @@ class MangaScreenViewModel(
             val includedTags = mutableListOf<String>()
             val excludedTags = mutableListOf<String>()
 
-            for(tag in tagsMapState) {
+            for(tag in tagChange.tagsMapState) {
                 if(tag.component2().tagSelectionStatus == TagSelectionStatus.Included) {
                     includedTags.add(tag.component2().mangaTag.id)
                 } else if( tag.component2().tagSelectionStatus == TagSelectionStatus.Excluded) {

@@ -78,6 +78,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 
 
@@ -136,18 +137,31 @@ fun MangaScreen(
         Box(
             modifier = modifier
                 .padding(paddingValues)
+                .fillMaxSize()
                 .background(backgroundColor)
         ) {
             when (val currentState = viewModel.mangaUiState) {
                 is MangaUiState.Loading -> LoadingScreen(modifier = modifier.fillMaxSize())
-                is MangaUiState.Success -> MangaGridScreen(
-                    currentState.manga, modifier = modifier
-                        .fillMaxWidth()
-                        .nestedScroll(scrollBehavior.nestedScrollConnection),
-                    loadMore = loadMore,
-                    onMangaClick = onMangaClick,
-                    backgroundColor = backgroundColor
-                )
+                is MangaUiState.Success ->  {
+                    if(currentState.manga.isNotEmpty()) {
+                        MangaGridScreen(
+                            currentState.manga, modifier = modifier
+                                .fillMaxWidth()
+                                .nestedScroll(scrollBehavior.nestedScrollConnection),
+                            loadMore = loadMore,
+                            onMangaClick = onMangaClick,
+                            backgroundColor = backgroundColor
+                        )
+                    } else {
+                        Text(text = stringResource(R.string.no_manga),
+                            fontSize = 25.sp,
+                            color = Color.White,
+                            modifier = Modifier.align(Alignment.Center),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
 
                 is MangaUiState.Error -> ErrorScreen(modifier = modifier.fillMaxSize())
             }
@@ -155,7 +169,7 @@ fun MangaScreen(
 
         if (viewModel.isSheetOpen) {
             FilterBottomSheet(
-                tagState = viewModel.tagsMapState,
+                tagState = viewModel.tagChange.tagsMapState,
                 sheetState = viewModel.sheetState,
                 orderState = viewModel.orderState,
                 onExpandIconClick = { viewModel.orderExpandedChange() },
