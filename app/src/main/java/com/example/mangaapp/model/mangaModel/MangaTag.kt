@@ -8,4 +8,4 @@ data class MangaTag(
     val type: String,
     val attributes: TagAttributes,
     val relationships: List<MangaRelationship>
-    )
+)

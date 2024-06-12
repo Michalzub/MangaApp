@@ -14,8 +14,10 @@ class DefaultAppContainer : AppContainer {
     private val baseUrl =
         "https://api.mangadex.org"
 
-    private val json = Json { ignoreUnknownKeys = true
-    coerceInputValues = true}
+    private val json = Json {
+        ignoreUnknownKeys = true
+        coerceInputValues = true
+    }
 
     private val retrofit = Retrofit.Builder()
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))

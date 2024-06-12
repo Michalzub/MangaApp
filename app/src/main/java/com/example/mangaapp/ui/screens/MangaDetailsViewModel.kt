@@ -1,3 +1,5 @@
+package com.example.mangaapp.ui.screens
+
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,13 +12,12 @@ import com.example.mangaapp.MangaApplication
 import com.example.mangaapp.data.MangaDexRepo
 import com.example.mangaapp.model.chapterModel.Chapter
 import com.example.mangaapp.model.mangaModel.Manga
-import com.example.mangaapp.ui.screens.MangaUiState
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 
 sealed interface MangaDetailUiState {
-    data class Success(val manga: Manga, val chapters: List<Chapter>): MangaDetailUiState
+    data class Success(val manga: Manga, val chapters: List<Chapter>) : MangaDetailUiState
     data class Error(val manga: Manga) : MangaDetailUiState
     data class Loading(val manga: Manga?) : MangaDetailUiState
 }
@@ -28,7 +29,7 @@ class MangaDetailsViewModel(
     var mangaDetailUiState: MangaDetailUiState by mutableStateOf(MangaDetailUiState.Loading(null))
         private set
 
-    init{
+    init {
         mangaDetailUiState = MangaDetailUiState.Loading(null)
     }
 
@@ -50,8 +51,8 @@ class MangaDetailsViewModel(
                         offset = loadingOffset
                     )
 
-                    for(chapter in response.data) {
-                        if(chapter.attributes.chapter != null && alreadyLoaded[chapter.attributes.chapter] == null) {
+                    for (chapter in response.data) {
+                        if (chapter.attributes.chapter != null && alreadyLoaded[chapter.attributes.chapter] == null) {
                             alreadyLoaded[chapter.attributes.chapter] = true
                             tempList.add(chapter)
                         }
@@ -71,7 +72,8 @@ class MangaDetailsViewModel(
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as MangaApplication)
+                val application =
+                    (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as MangaApplication)
                 val mangaDexRepo = application.container.mangaDexRepo
                 MangaDetailsViewModel(mangaDexRepo = mangaDexRepo)
             }

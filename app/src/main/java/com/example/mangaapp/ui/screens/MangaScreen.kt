@@ -81,7 +81,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -252,9 +251,9 @@ fun MangaGridScreen(
 @Composable
 fun MangaCard(
     manga: Manga,
-    secondaryColor: Color = Color.Black,
     onMangaClick: (Manga) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    secondaryColor: Color = Color.Black
 ) {
     Box(
         modifier = modifier
@@ -354,7 +353,7 @@ fun ErrorScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
-                Text(text = stringResource(R.string.reload), color = secondaryColor, )
+                Text(text = stringResource(R.string.reload), color = secondaryColor)
             }
         }
 
@@ -663,12 +662,4 @@ fun TagRow(
 internal fun LazyGridState.reachedBottom(buffer: Int = 1): Boolean {
     val lastVisibleItem = this.layoutInfo.visibleItemsInfo.lastOrNull()
     return lastVisibleItem?.index != 0 && lastVisibleItem?.index == this.layoutInfo.totalItemsCount - buffer
-}
-
-@Preview
-@Composable
-fun errorPrev() {
-    ErrorScreen {
-
-    }
 }

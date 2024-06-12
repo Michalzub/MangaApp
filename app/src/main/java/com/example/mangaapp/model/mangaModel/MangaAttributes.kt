@@ -1,10 +1,11 @@
 package com.example.mangaapp.model.mangaModel
 
 import kotlinx.serialization.Serializable
+
 @Serializable
 data class MangaAttributes(
     val title: Map<String, String>,
-    val altTitles: List<Map<String,String>>,
+    val altTitles: List<Map<String, String>>,
     val description: Map<String, String>,
     val isLocked: Boolean,
     val links: Map<String, String>? = null,

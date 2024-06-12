@@ -1,7 +1,5 @@
 package com.example.mangaapp.ui.screens
 
-import MangaDetailUiState
-import MangaDetailsViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -61,20 +59,17 @@ fun MangaDetailsScreen(
     onClickBack: () -> Unit,
     onChapterClick: (Chapter) -> Unit,
     modifier: Modifier = Modifier,
-    primaryColor: Color = Color.White,
     secondaryColor: Color = Color.Black,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    Scaffold(
-        topBar = {
-            DetailScreenTopBar(
-                text = "",
-                scrollBehavior = scrollBehavior,
-                onClickBack = onClickBack,
-                secondaryColor = secondaryColor
-            )
-        }
-    ) { innerValues ->
+    Scaffold(topBar = {
+        DetailScreenTopBar(
+            text = "",
+            scrollBehavior = scrollBehavior,
+            onClickBack = onClickBack,
+            secondaryColor = secondaryColor
+        )
+    }) { innerValues ->
         Box(
             modifier = Modifier
                 .background(secondaryColor)
@@ -98,10 +93,8 @@ fun MangaDetailsScreen(
 
                 is MangaDetailUiState.Error -> {
                     ErrorScreen(modifier = modifier.fillMaxSize(),
-                        onReloadClick = {mangaDetailsViewModel.loadMangaDetails(currentState.manga)})
+                        onReloadClick = { mangaDetailsViewModel.loadMangaDetails(currentState.manga) })
                 }
-
-                else -> {}
             }
         }
     }
@@ -123,8 +116,7 @@ fun MangaDetails(
         item { TagList(manga.attributes.tags, secondaryColor = secondaryColor) }
         item {
             Row(
-                modifier = Modifier.height(50.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.height(50.dp), verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "Total chapters: ${chapterList.size}",
@@ -167,16 +159,14 @@ fun DetailsHeader(
             val coverLink = "https://uploads.mangadex.org/covers/${manga.id}/${coverName}.256.jpg"
 
             AsyncImage(
-                model = ImageRequest.Builder(context = LocalContext.current)
-                    .data(coverLink)
-                    .crossfade(true)
-                    .build(),
-                error = if(secondaryColor == Color.Black) {
+                model = ImageRequest.Builder(context = LocalContext.current).data(coverLink)
+                    .crossfade(true).build(),
+                error = if (secondaryColor == Color.Black) {
                     painterResource(R.drawable.white_error_outline)
                 } else {
                     painterResource(R.drawable.error_outline)
                 },
-                placeholder = if(secondaryColor == Color.Black) {
+                placeholder = if (secondaryColor == Color.Black) {
                     painterResource(R.drawable.white_cloud_queue)
                 } else {
                     painterResource(R.drawable.cloud_queue)
@@ -201,16 +191,14 @@ fun DetailsHeader(
                     .fillMaxHeight()
             ) {
                 AsyncImage(
-                    model = ImageRequest.Builder(context = LocalContext.current)
-                        .data(coverLink)
-                        .crossfade(true)
-                        .build(),
-                    error = if(secondaryColor == Color.Black) {
+                    model = ImageRequest.Builder(context = LocalContext.current).data(coverLink)
+                        .crossfade(true).build(),
+                    error = if (secondaryColor == Color.Black) {
                         painterResource(R.drawable.white_error_outline)
                     } else {
                         painterResource(R.drawable.error_outline)
                     },
-                    placeholder = if(secondaryColor == Color.Black) {
+                    placeholder = if (secondaryColor == Color.Black) {
                         painterResource(R.drawable.white_cloud_queue)
                     } else {
                         painterResource(R.drawable.cloud_queue)
@@ -267,9 +255,7 @@ fun TagList(
                         .height(26.dp)
                         .padding(2.dp)
                         .border(
-                            width = 1.dp,
-                            color = primaryColor,
-                            shape = RoundedCornerShape(10.dp)
+                            width = 1.dp, color = primaryColor, shape = RoundedCornerShape(10.dp)
                         )
                         .background(secondaryColor),
                     shape = RoundedCornerShape(10.dp),
@@ -298,8 +284,7 @@ fun DetailScreenTopBar(
     primaryColor: Color = Color.White,
     secondaryColor: Color = Color.Black
 ) {
-    CenterAlignedTopAppBar(
-        scrollBehavior = scrollBehavior,
+    CenterAlignedTopAppBar(scrollBehavior = scrollBehavior,
         colors = TopAppBarDefaults.topAppBarColors(containerColor = secondaryColor),
         title = {
             Text(
@@ -308,8 +293,7 @@ fun DetailScreenTopBar(
             )
         },
         modifier = modifier,
-        navigationIcon =
-        {
+        navigationIcon = {
             IconButton(onClick = onClickBack) {
                 Icon(
                     imageVector = Icons.Filled.ArrowBack,
@@ -318,6 +302,5 @@ fun DetailScreenTopBar(
                     modifier = Modifier
                 )
             }
-        }
-    )
+        })
 }

@@ -30,13 +30,14 @@ interface MangaDexRepo {
 
 class NetworkMangaDexRepo(
     private val mangaDexApiService: MangaDexApiService
-): MangaDexRepo {
+) : MangaDexRepo {
 
-    override suspend fun getManga(title: String?,
-                                  includedTags: List<String>?,
-                                  excludedTags: List<String>?,
-                                  order: Map<String, String>?,
-                                  offset: Int
+    override suspend fun getManga(
+        title: String?,
+        includedTags: List<String>?,
+        excludedTags: List<String>?,
+        order: Map<String, String>?,
+        offset: Int
     ): MangaResponse = mangaDexApiService.getManga(
         title = title,
         includedTags = includedTags,
@@ -47,12 +48,14 @@ class NetworkMangaDexRepo(
     )
 
     override suspend fun getMangaTags(): MangaTagResponse = mangaDexApiService.getTags()
-    override suspend fun getChapters(id: String, limit: Int, offset: Int
+    override suspend fun getChapters(
+        id: String, limit: Int, offset: Int
     ): ChapterResponse = mangaDexApiService.getChapters(
         id = id,
         limit = limit,
         offset = offset
     )
 
-    override suspend fun getChapterImages(id: String): ChapterImageResponse = mangaDexApiService.getChapterImages(id)
+    override suspend fun getChapterImages(id: String): ChapterImageResponse =
+        mangaDexApiService.getChapterImages(id)
 }

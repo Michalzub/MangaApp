@@ -1,4 +1,5 @@
 package com.example.mangaapp.model.chapterModel
+
 import kotlinx.serialization.Serializable
 
 @Serializable
