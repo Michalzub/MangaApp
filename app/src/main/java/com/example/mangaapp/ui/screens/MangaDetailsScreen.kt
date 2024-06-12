@@ -265,7 +265,7 @@ fun DetailScreenTopBar(
             )
         },
         modifier = modifier,
-        actions =
+        navigationIcon =
         {
             IconButton(onClick = onClickBack) {
             Icon(imageVector = Icons.Filled.ArrowBack,

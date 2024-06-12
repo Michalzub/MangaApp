@@ -22,7 +22,7 @@ interface MangaDexApiService {
         @Query("excludedTags[]") excludedTags: List<String>?,
         @QueryMap order: Map<String,String>?,
         @Query("includes[]") includes: List<String> = listOf("author", "artist", "cover_art"),
-        @Query("contentRating[]") contentRating: List<String> = listOf("safe"),
+        @Query("contentRating[]") contentRating: List<String> = listOf("safe", "suggestive"),
         @Query("limit")  limit: Int,
         @Query("offset")  offset: Int
     ): MangaResponse
