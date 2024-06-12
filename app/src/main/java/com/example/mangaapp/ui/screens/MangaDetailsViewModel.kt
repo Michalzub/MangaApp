@@ -25,7 +25,7 @@ sealed interface MangaDetailUiState {
      * @param manga The manga details.
      * @param chapters The list of chapters.
      */
-    data class Success(val manga: Manga, val chapters: List<Chapter>) : MangaDetailUiState
+    data class Success(val manga: Manga, val chapters: List<Chapter>, val maxDescriptionLines: Int) : MangaDetailUiState
 
     /**
      * Represents an error state.
@@ -62,6 +62,20 @@ class MangaDetailsViewModel(
         mangaDetailUiState = MangaDetailUiState.Loading
     }
 
+    fun changeDescriptionMaxLines() {
+        when(val currentState = mangaDetailUiState) {
+            is MangaDetailUiState.Success -> {
+                if(currentState.maxDescriptionLines != 3) {
+                    mangaDetailUiState = currentState.copy(maxDescriptionLines = 3)
+                } else {
+                    mangaDetailUiState = currentState.copy(maxDescriptionLines = Int.MAX_VALUE)
+                }
+            }
+            else -> {}
+        }
+
+    }
+
     /**
      * Loads the manga details and its chapters.
      * @param manga The manga to load details for.
@@ -88,7 +102,7 @@ class MangaDetailsViewModel(
                     loadingOffset += 500
                 } while (loadingOffset < response.total)
                 tempList.sortBy { chapter -> (chapter.attributes.chapter)!!.toDouble() }
-                mangaDetailUiState = MangaDetailUiState.Success(manga = manga, chapters = tempList)
+                mangaDetailUiState = MangaDetailUiState.Success(manga = manga, chapters = tempList, 3)
             } catch (e: IOException) {
                 mangaDetailUiState = MangaDetailUiState.Error(manga)
             } catch (e: HttpException) {

@@ -10,4 +10,5 @@
     <string name="reload">Reload</string>
     <string name="couldnt_load_pages">Couldn\'t load pages.</string>
     <string name="no_pages">This chapter has no pages.</string>
+    <string name="couldn_t_load_manga_details">Couldn\'t load manga details.</string>
 </resources>

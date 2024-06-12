@@ -30,6 +30,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -43,6 +47,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -55,7 +60,7 @@ import com.example.mangaapp.model.mangaModel.MangaTag
 /**
  * MangaDetailsScreen displays the screen with manga details.
  *
- * @param mangaDetailsViewModel ViewModel providing the manga details state.
+ * @param viewModel ViewModel providing the manga details state.
  * @param onBackClick Lambda function to handle back button click.
  * @param onChapterClick Lambda function to handle chapter selection.
  * @param modifier Modifier for additional formatting.
@@ -64,7 +69,7 @@ import com.example.mangaapp.model.mangaModel.MangaTag
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MangaDetailsScreen(
-    mangaDetailsViewModel: MangaDetailsViewModel,
+    viewModel: MangaDetailsViewModel,
     onBackClick: () -> Unit,
     onChapterClick: (Chapter) -> Unit,
     modifier: Modifier = Modifier,
@@ -85,7 +90,7 @@ fun MangaDetailsScreen(
                 .padding(innerValues)
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
         ) {
-            when (val currentState = mangaDetailsViewModel.mangaDetailUiState) {
+            when(val currentState = viewModel.mangaDetailUiState) {
                 is MangaDetailUiState.Loading -> {
                     LoadingScreen(modifier = modifier.fillMaxSize())
                 }
@@ -93,6 +98,8 @@ fun MangaDetailsScreen(
                 is MangaDetailUiState.Success -> {
                     MangaDetails(
                         manga = currentState.manga,
+                        maxDescriptionLines = currentState.maxDescriptionLines,
+                        onDescriptionClick = { viewModel.changeDescriptionMaxLines() },
                         modifier = Modifier.fillMaxSize(),
                         secondaryColor = secondaryColor,
                         chapterList = currentState.chapters,
@@ -101,9 +108,12 @@ fun MangaDetailsScreen(
                 }
 
                 is MangaDetailUiState.Error -> {
-                    ErrorScreen(modifier = modifier.fillMaxSize(),
-                        onReloadClick = { mangaDetailsViewModel.loadMangaDetails(currentState.manga) })
+                    ErrorScreen(
+                        text = stringResource(R.string.couldn_t_load_manga_details),
+                        modifier = modifier.fillMaxSize(),
+                        onReloadClick = { viewModel.loadMangaDetails(currentState.manga) })
                 }
+                 else -> {}
             }
         }
     }
@@ -113,6 +123,8 @@ fun MangaDetailsScreen(
  * MangaDetails displays the details of a manga including its chapters.
  *
  * @param manga The manga whose details are to be displayed.
+ * @param maxDescriptionLines The maximum lines shown for the description.
+ * @param onDescriptionClick Lambda function to handle description click.
  * @param chapterList List of chapters of the manga.
  * @param onChapterClick Lambda function to handle chapter selection.
  * @param modifier Modifier for styling this composable.
@@ -122,17 +134,30 @@ fun MangaDetailsScreen(
 @Composable
 fun MangaDetails(
     manga: Manga,
+    maxDescriptionLines: Int,
+    onDescriptionClick: () -> Unit,
     chapterList: List<Chapter>,
     onChapterClick: (Chapter) -> Unit,
     modifier: Modifier = Modifier,
     primaryColor: Color = Color.White,
     secondaryColor: Color = Color.Black
 ) {
+    var maxLines by rememberSaveable { mutableStateOf(3) }
     LazyColumn(
         modifier = modifier
     ) {
         item { DetailsHeader(manga = manga, modifier = modifier, secondaryColor = secondaryColor) }
         item { TagList(manga.attributes.tags, secondaryColor = secondaryColor) }
+        item{
+            Text(
+                text = manga.attributes.description["en"] ?: "",
+                maxLines = maxDescriptionLines,
+                fontSize = 18.sp,
+                color = Color.White,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 10.dp).clickable { onDescriptionClick() }
+            )
+        }
         item {
             Row(
                 modifier = Modifier.height(50.dp), verticalAlignment = Alignment.CenterVertically

@@ -26,9 +26,10 @@ sealed interface ChapterReaderUiState {
     data class Success(val chapterImageLinks: List<String>) : ChapterReaderUiState
 
     /**
-     * Represents an error state.
+     * Represents an error state with the chapter that is supposed to be read.
+     * @param chapter Chapter to be read.
      */
-    data object Error : ChapterReaderUiState
+    data class Error(val chapter: Chapter) : ChapterReaderUiState
 
     /**
      * Represents a loading state.
@@ -75,9 +76,9 @@ class ChapterReaderViewModel(
                 // Update the state with the list of image links.
                 chapterReaderUiState = ChapterReaderUiState.Success(tempList)
             } catch (e: IOException) {
-                chapterReaderUiState = ChapterReaderUiState.Error
+                chapterReaderUiState = ChapterReaderUiState.Error(chapter)
             } catch (e: HttpException) {
-                chapterReaderUiState = ChapterReaderUiState.Error
+                chapterReaderUiState = ChapterReaderUiState.Error(chapter)
             }
         }
     }

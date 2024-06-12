@@ -194,7 +194,7 @@ fun ChapterReaderScreen(
                 is ChapterReaderUiState.Error -> {
                     ErrorScreen(
                         text = stringResource(R.string.couldnt_load_pages),
-                        onReloadClick = {},
+                        onReloadClick = { viewModel.loadChapterImageLinks(chapter = currentState.chapter) },
                         modifier = Modifier
                             .fillMaxSize()
                             .align(Alignment.Center)

@@ -50,7 +50,7 @@ fun MangaApp(
 
         composable(route = MangaAppScreens.MangaDetailsScreen.name) {
             MangaDetailsScreen(
-                mangaDetailsViewModel = mangaDetailsViewModel,
+                viewModel = mangaDetailsViewModel,
                 onBackClick = {
                     navController.navigateUp()
                     mangaDetailsViewModel.mangaDetailsLeave()

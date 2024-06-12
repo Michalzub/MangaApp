@@ -179,6 +179,7 @@ fun MangaScreen(
 
 
                 is MangaUiState.Error -> ErrorScreen(
+                    text = "Couldn't load manga.",
                     modifier = modifier.fillMaxSize(),
                     onReloadClick = { viewModel.reload() }
                 )
