@@ -51,7 +51,7 @@ fun MangaApp(
         composable(route = MangaAppScreens.MangaDetailsScreen.name) {
             MangaDetailsScreen(
                 mangaDetailsViewModel = mangaDetailsViewModel,
-                onClickBack = {
+                onBackClick = {
                     navController.navigateUp()
                     mangaDetailsViewModel.mangaDetailsLeave()
                 },
@@ -65,12 +65,10 @@ fun MangaApp(
 
         composable(route = MangaAppScreens.ChapterReaderScreen.name) {
             ChapterReaderScreen(
-                onClickBack = {
+                onBackClick = {
                     navController.navigateUp()
                 },
                 viewModel = chapterReaderViewModel,
-                isHorizontal = chapterReaderViewModel.isHorizontal,
-                onReadingModeChange = { chapterReaderViewModel.changeReadingMode() }
             )
         }
     }

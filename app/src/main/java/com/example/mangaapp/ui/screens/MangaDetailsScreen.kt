@@ -52,11 +52,20 @@ import com.example.mangaapp.model.chapterModel.Chapter
 import com.example.mangaapp.model.mangaModel.Manga
 import com.example.mangaapp.model.mangaModel.MangaTag
 
+/**
+ * MangaDetailsScreen displays the screen with manga details.
+ *
+ * @param mangaDetailsViewModel ViewModel providing the manga details state.
+ * @param onBackClick Lambda function to handle back button click.
+ * @param onChapterClick Lambda function to handle chapter selection.
+ * @param modifier Modifier for additional formatting.
+ * @param secondaryColor Secondary color of the UI.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MangaDetailsScreen(
     mangaDetailsViewModel: MangaDetailsViewModel,
-    onClickBack: () -> Unit,
+    onBackClick: () -> Unit,
     onChapterClick: (Chapter) -> Unit,
     modifier: Modifier = Modifier,
     secondaryColor: Color = Color.Black,
@@ -66,7 +75,7 @@ fun MangaDetailsScreen(
         DetailScreenTopBar(
             text = "",
             scrollBehavior = scrollBehavior,
-            onClickBack = onClickBack,
+            onBackClick = onBackClick,
             secondaryColor = secondaryColor
         )
     }) { innerValues ->
@@ -100,6 +109,16 @@ fun MangaDetailsScreen(
     }
 }
 
+/**
+ * MangaDetails displays the details of a manga including its chapters.
+ *
+ * @param manga The manga whose details are to be displayed.
+ * @param chapterList List of chapters of the manga.
+ * @param onChapterClick Lambda function to handle chapter selection.
+ * @param modifier Modifier for styling this composable.
+ * @param primaryColor Primary color of the UI.
+ * @param secondaryColor Secondary color of the UI.
+ */
 @Composable
 fun MangaDetails(
     manga: Manga,
@@ -144,6 +163,14 @@ fun MangaDetails(
     }
 }
 
+/**
+ * DetailsHeader displays the header of the manga details screen, including the cover image, tags and description.
+ *
+ * @param manga The manga whose details are to be displayed.
+ * @param modifier Modifier for additional formatting.
+ * @param primaryColor Primary color of the UI.
+ * @param secondaryColor Secondary color of the UI.
+ */
 @Composable
 fun DetailsHeader(
     manga: Manga,
@@ -156,6 +183,7 @@ fun DetailsHeader(
     ) {
         val coverName = manga.relationships.find { it.type == "cover_art" }?.attributes?.fileName
         if (coverName != null) {
+            //Constructing the full link of the image
             val coverLink = "https://uploads.mangadex.org/covers/${manga.id}/${coverName}.256.jpg"
 
             AsyncImage(
@@ -239,6 +267,14 @@ fun DetailsHeader(
     }
 }
 
+/**
+ * TagList displays a list of tags for the manga.
+ *
+ * @param tags List of tags to be displayed.
+ * @param modifier Modifier for additional formatting.
+ * @param primaryColor Primary color of the UI.
+ * @param secondaryColor Secondary color of the UI.
+ */
 @Composable
 fun TagList(
     tags: List<MangaTag>,
@@ -274,12 +310,22 @@ fun TagList(
     }
 }
 
+/**
+ * DetailScreenTopBar displays the top bar for the manga details screen.
+ *
+ * @param text Title text to be displayed in the top bar.
+ * @param scrollBehavior Scroll behavior for the top bar.
+ * @param onBackClick Lambda function to handle back button click.
+ * @param modifier Modifier for additional formatting.
+ * @param primaryColor Primary color of the UI.
+ * @param secondaryColor Secondary color of the UI.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreenTopBar(
     text: String,
     scrollBehavior: TopAppBarScrollBehavior,
-    onClickBack: () -> Unit,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     primaryColor: Color = Color.White,
     secondaryColor: Color = Color.Black
@@ -294,7 +340,7 @@ fun DetailScreenTopBar(
         },
         modifier = modifier,
         navigationIcon = {
-            IconButton(onClick = onClickBack) {
+            IconButton(onClick = onBackClick) {
                 Icon(
                     imageVector = Icons.Filled.ArrowBack,
                     tint = primaryColor,
@@ -302,5 +348,6 @@ fun DetailScreenTopBar(
                     modifier = Modifier
                 )
             }
-        })
+        }
+    )
 }

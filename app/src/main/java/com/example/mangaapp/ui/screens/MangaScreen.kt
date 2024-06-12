@@ -82,7 +82,15 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 
-
+/**
+ * Composable function to display the Manga screen.
+ *
+ * @param viewModel The ViewModel for managing UI-related data in the MangaScreen.
+ * @param onMangaClick Lambda function to handle clicks on a manga item.
+ * @param modifier Modifier for styling the MangaScreen composable.
+ * @param primaryColor Primary color used in the UI.
+ * @param secondaryColor Secondary color used in the UI.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MangaScreen(
@@ -186,7 +194,7 @@ fun MangaScreen(
                 onOrderDismissRequest = { viewModel.closeOrderDropdown() },
                 onOrderItemClick = { item -> viewModel.changeSelectedOrderItem(item) },
                 onOrderGloballyPositioned = { layoutCoordinates ->
-                    viewModel.setOrderTextFiledSize(
+                    viewModel.setOrderTextFieldSize(
                         layoutCoordinates
                     )
                 },
@@ -209,6 +217,17 @@ fun MangaScreen(
     }
 }
 
+/**
+ * Composable function to display the grid of manga items.
+ *
+ * @param mangaList List of manga items to display.
+ * @param modifier Modifier for styling the MangaGridScreen composable.
+ * @param lazyGridState State of the lazy grid for managing scroll position.
+ * @param contentPadding Padding values for the content.
+ * @param secondaryColor Secondary color used in the UI.
+ * @param loadMore Lambda function to load more manga items.
+ * @param onMangaClick Lambda function to handle clicks on a manga item.
+ */
 @Composable
 fun MangaGridScreen(
     mangaList: List<Manga>,
@@ -248,6 +267,14 @@ fun MangaGridScreen(
     }
 }
 
+/**
+ * Composable function to display a manga card.
+ *
+ * @param manga The manga item to display.
+ * @param onMangaClick Lambda function to handle clicks on the manga item.
+ * @param modifier Modifier for styling the MangaCard composable.
+ * @param secondaryColor Secondary color used in the UI.
+ */
 @Composable
 fun MangaCard(
     manga: Manga,
@@ -310,6 +337,14 @@ fun MangaCard(
     }
 }
 
+/**
+ * Composable function to display a loading screen.
+ *
+ * @param modifier Modifier for styling the LoadingScreen composable.
+ * @param primaryColor Primary color of the UI.
+ * @param secondaryColor Secondary color of the UI.
+ * @param trackColor Color for the track of the progress indicator.
+ */
 @Composable
 fun LoadingScreen(
     modifier: Modifier = Modifier,
@@ -330,6 +365,15 @@ fun LoadingScreen(
     }
 }
 
+/**
+ * Composable function to display an error screen.
+ *
+ * @param modifier Modifier for styling the ErrorScreen composable.
+ * @param text Error text to display.
+ * @param primaryColor Primary color of the UI.
+ * @param secondaryColor Secondary color of the UI.
+ * @param onReloadClick Lambda function to handle reload button click.
+ */
 @Composable
 fun ErrorScreen(
     modifier: Modifier = Modifier,
@@ -360,6 +404,16 @@ fun ErrorScreen(
     }
 }
 
+/**
+ * Composable function to display the top app bar in the Manga screen.
+ *
+ * @param text Text to display in the top app bar.
+ * @param scrollBehavior Scroll behavior of the top app bar.
+ * @param onSearchClick Lambda function to handle search button click.
+ * @param modifier Modifier for styling.
+ * @param primaryColor Primary color of the UI.
+ * @param secondaryColor Secondary color of the UI.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MangaScreenTopBar(
@@ -394,6 +448,18 @@ fun MangaScreenTopBar(
     )
 }
 
+/**
+ * Composable function to display the search bar in the Manga screen.
+ *
+ * @param scrollBehavior Scroll behavior of the search bar.
+ * @param searchQuery Current search query text.
+ * @param onSearchQueryChange Lambda function to handle search query change.
+ * @param onSearchClicked Lambda function to handle search button click.
+ * @param onCancelClicked Lambda function to handle cancel button click.
+ * @param modifier Modifier for styling.
+ * @param primaryColor Primary color of the UI.
+ * @param secondaryColor Secondary color of the UI.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MangaSearchBar(
@@ -449,6 +515,24 @@ fun MangaSearchBar(
     )
 }
 
+/**
+ * Composable function to display the filter bottom sheet.
+ *
+ * @param sheetState State of the bottom sheet.
+ * @param onFilterClick Lambda function to handle filter button click.
+ * @param onResetClick Lambda function to handle reset button click.
+ * @param onDismissRequest Lambda function to handle dismiss request.
+ * @param tagState State of the tags.
+ * @param onTagClick Lambda function to handle tag click.
+ * @param lazyColumnState State of the lazy column.
+ * @param orderState State of the order menu.
+ * @param onExpandIconClick Lambda function to handle expand icon click.
+ * @param onOrderDismissRequest Lambda function to handle order dismiss request.
+ * @param onOrderItemClick Lambda function to handle order item click.
+ * @param onOrderGloballyPositioned Lambda function to handle position of the order menu.
+ * @param primaryColor Primary color of the UI.
+ * @param secondaryColor Secondary color of the UI.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterBottomSheet(
@@ -494,7 +578,7 @@ fun FilterBottomSheet(
                     expanded = orderState.expanded,
                     list = orderState.list,
                     selectedItem = orderState.selectedItem,
-                    textFiledSize = orderState.textFiledSize,
+                    textFieldSize = orderState.textFieldSize,
                     onExpandIconClick = onExpandIconClick,
                     onOrderDismissRequest = onOrderDismissRequest,
                     onOrderItemClick = onOrderItemClick,
@@ -521,6 +605,14 @@ fun FilterBottomSheet(
     }
 }
 
+/**
+ * Composable function to display the filter drag handle.
+ *
+ * @param primaryColor Primary color of the UI.
+ * @param secondaryColor Secondary color of the UI.
+ * @param onResetClick Lambda function to handle reset button click.
+ * @param onFilterClick Lambda function to handle filter button click.
+ */
 @Composable
 fun FilterDragHandle(
     primaryColor: Color,
@@ -555,13 +647,26 @@ fun FilterDragHandle(
     }
 }
 
+/**
+ * Composable function to display the order drop-down menu.
+ *
+ * @param expanded Whether the drop-down menu is expanded.
+ * @param primaryColor Primary color of the UI.
+ * @param list List of items in the drop-down menu.
+ * @param selectedItem Currently selected item.
+ * @param textFieldSize Size of the text field.
+ * @param onOrderGloballyPositioned Lambda function to handle position of the order menu.
+ * @param onExpandIconClick Lambda function to handle expand icon click.
+ * @param onOrderDismissRequest Lambda function to handle order dismiss request.
+ * @param onOrderItemClick Lambda function to handle order item click.
+ */
 @Composable
 fun OrderDropDownMenu(
     expanded: Boolean,
     primaryColor: Color,
     list: List<String>,
     selectedItem: String,
-    textFiledSize: Size,
+    textFieldSize: Size,
     onOrderGloballyPositioned: (LayoutCoordinates) -> Unit,
     onExpandIconClick: () -> Unit,
     onOrderDismissRequest: () -> Unit,
@@ -607,7 +712,7 @@ fun OrderDropDownMenu(
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { onOrderDismissRequest() },
-                modifier = Modifier.width(with(LocalDensity.current) { textFiledSize.width.toDp() })
+                modifier = Modifier.width(with(LocalDensity.current) { textFieldSize.width.toDp() })
             ) {
                 list.forEach { label ->
                     DropdownMenuItem(
@@ -624,6 +729,13 @@ fun OrderDropDownMenu(
     }
 }
 
+/**
+ * Composable function to display a row of tags.
+ *
+ * @param tagSelectionStatus Status of the tag selection.
+ * @param tagName Name of the tag.
+ * @param modifier Modifier for additional formatting.
+ */
 @Composable
 fun TagRow(
     tagSelectionStatus: TagSelectionStatus?,
@@ -659,6 +771,12 @@ fun TagRow(
     )
 }
 
+/**
+ * Checks if the lazy grid has reached the bottom.
+ *
+ * @param buffer Number of items to consider as buffer before reaching the bottom.
+ * @return true if the lazy grid has reached the bottom, false otherwise.
+ */
 internal fun LazyGridState.reachedBottom(buffer: Int = 1): Boolean {
     val lastVisibleItem = this.layoutInfo.visibleItemsInfo.lastOrNull()
     return lastVisibleItem?.index != 0 && lastVisibleItem?.index == this.layoutInfo.totalItemsCount - buffer

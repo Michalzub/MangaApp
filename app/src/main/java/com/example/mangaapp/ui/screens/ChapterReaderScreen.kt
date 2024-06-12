@@ -40,14 +40,21 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.mangaapp.R
 
+/**
+ * Composable function to display the ChapterReader screen.
+ *
+ * @param viewModel The ViewModel associated with the ChapterReader screen.
+ * @param onBackClick Lambda function to handle back button click.
+ * @param modifier Modifier for additional formatting.
+ * @param primaryColor Primary color of the UI.
+ * @param secondaryColor Secondary color of the UI.
+ */
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChapterReaderScreen(
     viewModel: ChapterReaderViewModel,
-    isHorizontal: Boolean,
-    onReadingModeChange: () -> Unit,
-    onClickBack: () -> Unit,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     primaryColor: Color = Color.White,
     secondaryColor: Color = Color.Black
@@ -61,9 +68,9 @@ fun ChapterReaderScreen(
         topBar = {
             if (isTopBarVisible) {
                 ChapterViewerBar(
-                    onBackClick = onClickBack,
-                    isHorizontal = isHorizontal,
-                    onReadingModeChange = onReadingModeChange,
+                    onBackClick = onBackClick,
+                    isReadingHorizontal = viewModel.isReadingHorizontal,
+                    onReadingModeChange = { viewModel.changeReadingMode() },
                     primaryColor = primaryColor,
                     secondaryColor = secondaryColor
                 )
@@ -78,10 +85,11 @@ fun ChapterReaderScreen(
         ) {
             val isLandscape =
                 LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+            //based on the state displays different screens
             when (val currentState = viewModel.chapterReaderUiState) {
                 is ChapterReaderUiState.Success -> {
                     if (currentState.chapterImageLinks.isNotEmpty()) {
-                        if (!isHorizontal) {
+                        if (!viewModel.isReadingHorizontal) {
                             LazyColumn {
                                 items(currentState.chapterImageLinks) { image ->
                                     AsyncImage(
@@ -128,6 +136,7 @@ fun ChapterReaderScreen(
                                             .data(currentState.chapterImageLinks[index])
                                             .crossfade(true)
                                             .build(),
+                                        //decides the color of the loading and error icons
                                         error = if (secondaryColor == Color.Black) {
                                             painterResource(R.drawable.white_error_outline)
                                         } else {
@@ -198,11 +207,21 @@ fun ChapterReaderScreen(
     }
 }
 
+/**
+ * Composable function to display the top app bar in the ChapterReader screen.
+ *
+ * @param onBackClick Lambda function to handle back button click.
+ * @param isReadingHorizontal Boolean to indicate if the reading mode is horizontal.
+ * @param onReadingModeChange Lambda function to handle reading mode change.
+ * @param modifier Modifier for additional formatting.
+ * @param primaryColor Primary color of the UI.
+ * @param secondaryColor Secondary color of the UI.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChapterViewerBar(
     onBackClick: () -> Unit,
-    isHorizontal: Boolean,
+    isReadingHorizontal: Boolean,
     onReadingModeChange: () -> Unit,
     modifier: Modifier = Modifier,
     primaryColor: Color = Color.White,
@@ -224,7 +243,7 @@ fun ChapterViewerBar(
             IconButton(onClick = onReadingModeChange) {
                 Icon(
                     painter =
-                    if (isHorizontal) {
+                    if (isReadingHorizontal) {
                         painterResource(R.drawable.swap_vert)
                     } else {
                         painterResource(R.drawable.swap_horiz)

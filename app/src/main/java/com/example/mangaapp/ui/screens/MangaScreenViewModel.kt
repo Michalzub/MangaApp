@@ -22,35 +22,53 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 
+/**
+ * Represents the different states of the Manga UI.
+ */
 sealed interface MangaUiState {
     data class Success(val manga: List<Manga>) : MangaUiState
     data object Error : MangaUiState
     data object Loading : MangaUiState
 }
 
+/**
+ * Enum representing the selection status of a tag.
+ */
 enum class TagSelectionStatus {
     Included,
     Excluded,
     Unselected,
 }
 
+/**
+ * Data class representing the change in tag selection.
+ */
 data class TagChange(
     val change: Boolean,
     val tagsMapState: Map<String, TagState>
 )
 
+/**
+ * Data class representing the state of ordering in the UI.
+ */
 data class OrderState(
     val expanded: Boolean,
     val list: List<String>,
     val selectedItem: String,
-    val textFiledSize: Size
+    val textFieldSize: Size
 )
 
+/**
+ * Data class representing the state of a tag.
+ */
 data class TagState(
     val mangaTag: MangaTag,
     var tagSelectionStatus: TagSelectionStatus
 )
 
+/**
+ * Data class representing the state of manga search.
+ */
 data class MangaSearchState(
     val isSearching: Boolean,
     val title: String,
@@ -58,6 +76,11 @@ data class MangaSearchState(
     val total: Int
 )
 
+/**
+ * ViewModel for the Manga screen.
+ *
+ * @property mangaDexRepo Repository for fetching manga data.
+ */
 class MangaScreenViewModel(
     private val mangaDexRepo: MangaDexRepo
 ) : ViewModel() {
@@ -82,22 +105,41 @@ class MangaScreenViewModel(
     )
         private set
 
+    /**
+     * Toggles the expanded state of the order dropdown.
+     */
     fun orderExpandedChange() {
         orderState = orderState.copy(expanded = !orderState.expanded)
     }
 
+    /**
+     * Closes the order dropdown.
+     */
     fun closeOrderDropdown() {
         orderState = orderState.copy(expanded = false)
     }
 
+    /**
+     * Changes the selected item in the order dropdown.
+     *
+     * @param item The newly selected item.
+     */
     fun changeSelectedOrderItem(item: String) {
         orderState = orderState.copy(selectedItem = item)
     }
 
-    fun setOrderTextFiledSize(layoutCoordinates: LayoutCoordinates) {
-        orderState = orderState.copy(textFiledSize = layoutCoordinates.size.toSize())
+    /**
+     * Sets the size of the order dropdown text field.
+     *
+     * @param layoutCoordinates Layout coordinates of the text field.
+     */
+    fun setOrderTextFieldSize(layoutCoordinates: LayoutCoordinates) {
+        orderState = orderState.copy(textFieldSize = layoutCoordinates.size.toSize())
     }
 
+    /**
+     * Resets the order state to default.
+     */
     fun resetOrderState() {
         orderState = OrderState(false, listOf("Latest", "Rating", "Followed"), "Latest", Size.Zero)
     }
@@ -106,10 +148,16 @@ class MangaScreenViewModel(
     var sheetState: SheetState by mutableStateOf(SheetState(skipPartiallyExpanded = false))
         private set
 
+    /**
+     * Opens the bottom sheet.
+     */
     fun openSheet() {
         isSheetOpen = true
     }
 
+    /**
+     * Closes the bottom sheet.
+     */
     fun closeSheet() {
         isSheetOpen = false
     }
@@ -119,27 +167,49 @@ class MangaScreenViewModel(
         getMangaTags()
     }
 
+    /**
+     * Reloads data by fetching manga and tags again.
+     */
     fun reload() {
         getManga()
         getMangaTags()
     }
 
+    /**
+     * Starts the search operation.
+     */
     fun startSearching() {
         mangaSearchState = mangaSearchState.copy(isSearching = true)
     }
 
+    /**
+     * Stops the search operation.
+     */
     fun stopSearching() {
         mangaSearchState = mangaSearchState.copy(isSearching = false)
     }
 
+    /**
+     * Initiates a search operation.
+     */
     fun search() {
         getManga()
     }
 
+    /**
+     * Changes the title query for search.
+     *
+     * @param title The new title query.
+     */
     fun changeTitleQuery(title: String) {
         mangaSearchState = mangaSearchState.copy(title = title)
     }
 
+    /**
+     * Toggles the selection status of a tag.
+     *
+     * @param tag The tag to toggle.
+     */
     fun cycleTagSelectionStatus(tag: String?) {
         if (tag != null && tagChange.tagsMapState[tag] != null) {
             val tempTags = tagChange.tagsMapState.toMutableMap()
@@ -159,6 +229,9 @@ class MangaScreenViewModel(
         }
     }
 
+    /**
+     * Resets the search state.
+     */
     fun resetSearchState() {
         val tempTags = tagChange.tagsMapState
         for (tag in tempTags) {
@@ -187,6 +260,9 @@ class MangaScreenViewModel(
         }
     }
 
+    /**
+     * Loads more manga data.
+     */
     fun loadMoreManga() {
         viewModelScope.launch {
             val includedTags = mutableListOf<String>()
@@ -293,6 +369,9 @@ class MangaScreenViewModel(
         }
     }
 
+    /**
+     * Factory for creating an instance of MangaScreenViewModel.
+     */
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {

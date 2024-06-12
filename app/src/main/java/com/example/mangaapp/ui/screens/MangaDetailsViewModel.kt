@@ -16,29 +16,58 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 
+/**
+ * Represents the different states of the UI in the MangaDetail screen.
+ */
 sealed interface MangaDetailUiState {
+    /**
+     * Represents a successful state with manga details and a list of chapters.
+     * @param manga The manga details.
+     * @param chapters The list of chapters.
+     */
     data class Success(val manga: Manga, val chapters: List<Chapter>) : MangaDetailUiState
+
+    /**
+     * Represents an error state.
+     * @param manga The manga details.
+     */
     data class Error(val manga: Manga) : MangaDetailUiState
-    data class Loading(val manga: Manga?) : MangaDetailUiState
+
+    /**
+     * Represents a loading state.
+     */
+    data object Loading : MangaDetailUiState
 }
 
+/**
+ * ViewModel for managing the state and logic of the MangaDetails screen.
+ * @param mangaDexRepo Repository for interacting with the MangaDex API.
+ */
 class MangaDetailsViewModel(
     private val mangaDexRepo: MangaDexRepo,
 ) : ViewModel() {
-    /** The mutable State that stores the status of the most recent request */
-    var mangaDetailUiState: MangaDetailUiState by mutableStateOf(MangaDetailUiState.Loading(null))
+
+    // Holds the current state of the MangaDetails UI.
+    var mangaDetailUiState: MangaDetailUiState by mutableStateOf(MangaDetailUiState.Loading)
         private set
 
     init {
-        mangaDetailUiState = MangaDetailUiState.Loading(null)
+        mangaDetailUiState = MangaDetailUiState.Loading
     }
 
+    /**
+     * Resets the UI state to the initial loading state.
+     */
     fun mangaDetailsLeave() {
-        mangaDetailUiState = MangaDetailUiState.Loading(null)
+        mangaDetailUiState = MangaDetailUiState.Loading
     }
 
+    /**
+     * Loads the manga details and its chapters.
+     * @param manga The manga to load details for.
+     */
     fun loadMangaDetails(manga: Manga) {
-        mangaDetailUiState = MangaDetailUiState.Loading(manga)
+        mangaDetailUiState = MangaDetailUiState.Loading
         var loadingOffset = 0
         val tempList = mutableListOf<Chapter>()
         viewModelScope.launch {
@@ -46,12 +75,11 @@ class MangaDetailsViewModel(
                 val alreadyLoaded = mutableMapOf<String, Boolean>()
                 do {
                     val response = mangaDexRepo.getChapters(
-                        id = manga.id,
-                        limit = 500,
-                        offset = loadingOffset
+                        id = manga.id, limit = 500, offset = loadingOffset
                     )
 
                     for (chapter in response.data) {
+                        // Check if chapter has already been loaded
                         if (chapter.attributes.chapter != null && alreadyLoaded[chapter.attributes.chapter] == null) {
                             alreadyLoaded[chapter.attributes.chapter] = true
                             tempList.add(chapter)
@@ -69,6 +97,9 @@ class MangaDetailsViewModel(
         }
     }
 
+    /**
+     * Factory for creating an instance of MangaDetailsViewModel.
+     */
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
