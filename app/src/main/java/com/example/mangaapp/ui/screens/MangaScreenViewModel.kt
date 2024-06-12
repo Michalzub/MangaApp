@@ -115,6 +115,11 @@ class MangaScreenViewModel(
         getMangaTags()
     }
 
+    fun reload() {
+        getManga()
+        getMangaTags()
+    }
+
     fun startSearching() {
         mangaSearchState = mangaSearchState.copy(isSearching = true)
     }
@@ -153,14 +158,21 @@ class MangaScreenViewModel(
 
     private fun getMangaTags() {
         viewModelScope.launch {
-            val tempTags = tagChange.tagsMapState.toMutableMap()
-            for(tag in mangaDexRepo.getMangaTags().data) {
-                val tagName = tag.attributes.name["en"]
-                if(tagName != null) {
-                    tempTags[tagName] = TagState(tag, TagSelectionStatus.Unselected)
+            try {
+                val tempTags = tagChange.tagsMapState.toMutableMap()
+                for(tag in mangaDexRepo.getMangaTags().data) {
+                    val tagName = tag.attributes.name["en"]
+                    if(tagName != null) {
+                        tempTags[tagName] = TagState(tag, TagSelectionStatus.Unselected)
+                    }
                 }
+                tagChange = tagChange.copy(tagsMapState = tempTags)
+            } catch (e: IOException) {
+                tagChange = tagChange.copy(tagsMapState = emptyMap())
+            } catch (e: HttpException) {
+                tagChange = tagChange.copy(tagsMapState = emptyMap())
             }
-            tagChange = tagChange.copy(tagsMapState = tempTags)
+
         }
     }
 
@@ -179,25 +191,31 @@ class MangaScreenViewModel(
             when(val currentState = mangaUiState) {
                 is MangaUiState.Success -> {
                     val updatedMangaList = currentState.manga.toMutableList()
-                    val response = mangaDexRepo.getManga(
-                        title = if(mangaSearchState.title == "") {
-                            null
-                        } else {
-                            mangaSearchState.title
-                        },
-                        includedTags = includedTags,
-                        excludedTags = excludedTags,
-                        order = getOrderQuery(),
-                        offset = mangaSearchState.offset
-                    )
-                    for(manga in response.data)
-                    {
-                        if(!updatedMangaList.any {it.id == manga.id}) {
-                            updatedMangaList.add(manga)
+                    try {
+                        val response = mangaDexRepo.getManga(
+                            title = if(mangaSearchState.title == "") {
+                                null
+                            } else {
+                                mangaSearchState.title
+                            },
+                            includedTags = includedTags,
+                            excludedTags = excludedTags,
+                            order = getOrderQuery(),
+                            offset = mangaSearchState.offset
+                        )
+                        for(manga in response.data)
+                        {
+                            if(!updatedMangaList.any {it.id == manga.id}) {
+                                updatedMangaList.add(manga)
+                            }
                         }
+                        mangaSearchState = mangaSearchState.copy(offset = mangaSearchState.offset + response.limit)
+                        mangaUiState = MangaUiState.Success(updatedMangaList)
+                    } catch (e: IOException) {
+                        //mangaUiState = MangaUiState.Error
+                    } catch (e: HttpException) {
+                        //mangaUiState = MangaUiState.Error
                     }
-                    mangaSearchState = mangaSearchState.copy(offset = mangaSearchState.offset + response.limit)
-                    mangaUiState = MangaUiState.Success(updatedMangaList)
                 }
                 else -> {
 

@@ -2,4 +2,12 @@
     <string name="app_name">MangaApp</string>
     <string name="loading">Loading</string>
     <string name="no_manga">There is no manga that fits your criteria.</string>
+    <string name="search">Search</string>
+    <string name="error">Error</string>
+    <string name="cancel">Cancel</string>
+    <string name="back">Back</string>
+    <string name="cover">cover</string>
+    <string name="reload">Reload</string>
+    <string name="couldnt_load_pages">Couldn\'t load pages.</string>
+    <string name="no_pages">This chapter has no pages.</string>
 </resources>

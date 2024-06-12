@@ -17,26 +17,27 @@ import java.io.IOException
 
 sealed interface MangaDetailUiState {
     data class Success(val manga: Manga, val chapters: List<Chapter>): MangaDetailUiState
-    object Error : MangaDetailUiState
-    object Loading : MangaDetailUiState
+    data class Error(val manga: Manga) : MangaDetailUiState
+    data class Loading(val manga: Manga?) : MangaDetailUiState
 }
 
 class MangaDetailsViewModel(
     private val mangaDexRepo: MangaDexRepo,
 ) : ViewModel() {
     /** The mutable State that stores the status of the most recent request */
-    var mangaDetailUiState: MangaDetailUiState by mutableStateOf(MangaDetailUiState.Loading)
+    var mangaDetailUiState: MangaDetailUiState by mutableStateOf(MangaDetailUiState.Loading(null))
         private set
 
     init{
-        mangaDetailUiState = MangaDetailUiState.Loading
+        mangaDetailUiState = MangaDetailUiState.Loading(null)
     }
 
     fun mangaDetailsLeave() {
-        mangaDetailUiState = MangaDetailUiState.Loading
+        mangaDetailUiState = MangaDetailUiState.Loading(null)
     }
 
     fun loadMangaDetails(manga: Manga) {
+        mangaDetailUiState = MangaDetailUiState.Loading(manga)
         var loadingOffset = 0
         val tempList = mutableListOf<Chapter>()
         viewModelScope.launch {
@@ -60,9 +61,9 @@ class MangaDetailsViewModel(
                 tempList.sortBy { chapter -> (chapter.attributes.chapter)!!.toDouble() }
                 mangaDetailUiState = MangaDetailUiState.Success(manga = manga, chapters = tempList)
             } catch (e: IOException) {
-                mangaDetailUiState = MangaDetailUiState.Error
+                mangaDetailUiState = MangaDetailUiState.Error(manga)
             } catch (e: HttpException) {
-                mangaDetailUiState = MangaDetailUiState.Error
+                mangaDetailUiState = MangaDetailUiState.Error(manga)
             }
         }
     }

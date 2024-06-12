@@ -36,7 +36,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -44,8 +43,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -62,64 +61,79 @@ fun MangaDetailsScreen(
     onClickBack: () -> Unit,
     onChapterClick: (Chapter) -> Unit,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = Color.Black,
+    primaryColor: Color = Color.White,
+    secondaryColor: Color = Color.Black,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
-        topBar = { DetailScreenTopBar("", modifier = modifier, scrollBehavior = scrollBehavior, onClickBack =  onClickBack, backgroundColor = backgroundColor) }
+        topBar = {
+            DetailScreenTopBar(
+                text = "",
+                scrollBehavior = scrollBehavior,
+                onClickBack = onClickBack,
+                secondaryColor = secondaryColor
+            )
+        }
     ) { innerValues ->
-        Box(modifier = Modifier
-            .background(backgroundColor)
-            .padding(innerValues)
-            .nestedScroll(scrollBehavior.nestedScrollConnection)) {
+        Box(
+            modifier = Modifier
+                .background(secondaryColor)
+                .padding(innerValues)
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+        ) {
             when (val currentState = mangaDetailsViewModel.mangaDetailUiState) {
                 is MangaDetailUiState.Loading -> {
                     LoadingScreen(modifier = modifier.fillMaxSize())
                 }
+
                 is MangaDetailUiState.Success -> {
                     MangaDetails(
                         manga = currentState.manga,
                         modifier = Modifier.fillMaxSize(),
-                        backgroundColor = backgroundColor,
+                        secondaryColor = secondaryColor,
                         chapterList = currentState.chapters,
                         onChapterClick = onChapterClick
                     )
                 }
+
                 is MangaDetailUiState.Error -> {
-                    ErrorScreen( modifier = modifier.fillMaxSize())
+                    ErrorScreen(modifier = modifier.fillMaxSize(),
+                        onReloadClick = {mangaDetailsViewModel.loadMangaDetails(currentState.manga)})
                 }
-                else -> {
-                    ErrorScreen( modifier = modifier.fillMaxSize())
-                    /*TODO delete else branch*/
-                }
+
+                else -> {}
             }
         }
     }
 }
+
 @Composable
 fun MangaDetails(
     manga: Manga,
     chapterList: List<Chapter>,
     onChapterClick: (Chapter) -> Unit,
     modifier: Modifier = Modifier,
-    backgroundColor: Color
+    primaryColor: Color = Color.White,
+    secondaryColor: Color = Color.Black
 ) {
     LazyColumn(
         modifier = modifier
     ) {
-        item{ DetailsHeader(manga = manga, modifier = modifier, backgroundColor = backgroundColor) }
-        item{ TagList(manga.attributes.tags, backgroundColor = backgroundColor) }
-        item { Row(
-            modifier = Modifier.height(50.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = "Total chapters: ${chapterList.size}",
-                fontSize = 25.sp,
-                color = Color.White
-            )
-        } }
-        items(chapterList) {
-            chapter ->
+        item { DetailsHeader(manga = manga, modifier = modifier, secondaryColor = secondaryColor) }
+        item { TagList(manga.attributes.tags, secondaryColor = secondaryColor) }
+        item {
+            Row(
+                modifier = Modifier.height(50.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Total chapters: ${chapterList.size}",
+                    fontSize = 25.sp,
+                    color = primaryColor
+                )
+            }
+        }
+        items(chapterList) { chapter ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -127,7 +141,12 @@ fun MangaDetails(
                     .clickable { onChapterClick(chapter) },
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Chapter ${chapter.attributes.chapter}", fontSize = 20.sp, color = Color.White, modifier = Modifier.padding(start = 5.dp))
+                Text(
+                    text = "Chapter ${chapter.attributes.chapter}",
+                    fontSize = 20.sp,
+                    color = primaryColor,
+                    modifier = Modifier.padding(start = 5.dp)
+                )
             }
         }
     }
@@ -136,8 +155,9 @@ fun MangaDetails(
 @Composable
 fun DetailsHeader(
     manga: Manga,
-    backgroundColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    primaryColor: Color = Color.White,
+    secondaryColor: Color = Color.Black
 ) {
     Box(
         modifier = Modifier.height(250.dp)
@@ -151,10 +171,18 @@ fun DetailsHeader(
                     .data(coverLink)
                     .crossfade(true)
                     .build(),
-                error = painterResource(R.drawable.ic_launcher_background),
-                placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
+                error = if(secondaryColor == Color.Black) {
+                    painterResource(R.drawable.white_error_outline)
+                } else {
+                    painterResource(R.drawable.error_outline)
+                },
+                placeholder = if(secondaryColor == Color.Black) {
+                    painterResource(R.drawable.white_cloud_queue)
+                } else {
+                    painterResource(R.drawable.cloud_queue)
+                },
                 contentScale = ContentScale.Crop,
-                contentDescription = "cover",
+                contentDescription = stringResource(R.string.cover),
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RectangleShape)
@@ -166,7 +194,7 @@ fun DetailsHeader(
                 modifier
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, backgroundColor),
+                            colors = listOf(Color.Transparent, secondaryColor),
                         )
                     )
                     .fillMaxWidth()
@@ -177,9 +205,17 @@ fun DetailsHeader(
                         .data(coverLink)
                         .crossfade(true)
                         .build(),
-                    error = painterResource(R.drawable.ic_launcher_background),
-                    placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
-                    contentDescription = "cover",
+                    error = if(secondaryColor == Color.Black) {
+                        painterResource(R.drawable.white_error_outline)
+                    } else {
+                        painterResource(R.drawable.error_outline)
+                    },
+                    placeholder = if(secondaryColor == Color.Black) {
+                        painterResource(R.drawable.white_cloud_queue)
+                    } else {
+                        painterResource(R.drawable.cloud_queue)
+                    },
+                    contentDescription = stringResource(R.string.cover),
                     modifier = Modifier
                         .width(126.dp)
                         .height(180.dp)
@@ -194,16 +230,17 @@ fun DetailsHeader(
                         text = manga.attributes.title["en"] ?: "",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
-                        color = Color.White,
+                        color = primaryColor,
                         modifier = Modifier
                             .padding(start = 5.dp)
                             .align(Alignment.Start),
                     )
-                    val author = manga.relationships.find { it.type == "author" }?.attributes?.name ?: ""
+                    val author =
+                        manga.relationships.find { it.type == "author" }?.attributes?.name ?: ""
                     Text(
                         text = author,
                         fontSize = 15.sp,
-                        color = Color.White,
+                        color = primaryColor,
                         modifier = Modifier
                             .padding(start = 5.dp, top = 20.dp)
                             .align(Alignment.Start)
@@ -217,33 +254,38 @@ fun DetailsHeader(
 @Composable
 fun TagList(
     tags: List<MangaTag>,
-    backgroundColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    primaryColor: Color = Color.White,
+    secondaryColor: Color = Color.Black
 ) {
     LazyRow {
-        items(tags) {tag ->
+        items(tags) { tag ->
             val tagName = tag.attributes.name["en"]
-            if(tagName != null) {
+            if (tagName != null) {
                 Card(
                     modifier = modifier
                         .height(26.dp)
                         .padding(2.dp)
-                        .border(width = 1.dp, color = Color.Cyan, shape = RoundedCornerShape(10.dp))
-                        .background(backgroundColor),
+                        .border(
+                            width = 1.dp,
+                            color = primaryColor,
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                        .background(secondaryColor),
                     shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = backgroundColor)
+                    colors = CardDefaults.cardColors(containerColor = secondaryColor)
                 ) {
 
-                    Text(text = tagName, fontSize = 15.sp,color = Color.Cyan,modifier = Modifier.padding(start = 5.dp, end = 5.dp))
+                    Text(
+                        text = tagName,
+                        fontSize = 15.sp,
+                        color = primaryColor,
+                        modifier = Modifier.padding(start = 5.dp, end = 5.dp)
+                    )
                 }
             }
         }
     }
-}
-
-@Composable
-fun ChapterList() {
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -252,12 +294,13 @@ fun DetailScreenTopBar(
     text: String,
     scrollBehavior: TopAppBarScrollBehavior,
     onClickBack: () -> Unit,
-    backgroundColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    primaryColor: Color = Color.White,
+    secondaryColor: Color = Color.Black
 ) {
     CenterAlignedTopAppBar(
         scrollBehavior = scrollBehavior,
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = backgroundColor),
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = secondaryColor),
         title = {
             Text(
                 text = text,
@@ -268,17 +311,13 @@ fun DetailScreenTopBar(
         navigationIcon =
         {
             IconButton(onClick = onClickBack) {
-            Icon(imageVector = Icons.Filled.ArrowBack,
-                tint = Color.White,
-                contentDescription = "Back",
-                modifier = Modifier)
+                Icon(
+                    imageVector = Icons.Filled.ArrowBack,
+                    tint = primaryColor,
+                    contentDescription = stringResource(R.string.back),
+                    modifier = Modifier
+                )
             }
         }
     )
-}
-
-@Preview
-@Composable
-fun MangaDetailsPreview() {
-    //MangaDetailsScreen(onClickBack = { /*TODO*/ })
 }

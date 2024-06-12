@@ -1,6 +1,5 @@
 package com.example.mangaapp.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -48,7 +47,9 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -80,16 +81,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MangaScreen(
     viewModel: MangaScreenViewModel,
-    modifier: Modifier = Modifier,
-    backgroundColor: Color = Color.Black,
-    loadMore: () -> Unit,
     onMangaClick: (Manga) -> Unit,
+    modifier: Modifier = Modifier,
+    primaryColor: Color = Color.White,
+    secondaryColor: Color = Color.Black
+
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
@@ -98,21 +101,21 @@ fun MangaScreen(
                 MangaSearchBar(
                     scrollBehavior = scrollBehavior,
                     searchQuery = viewModel.mangaSearchState.title,
-                    backgroundColor = backgroundColor,
                     onSearchClicked = { viewModel.search() },
                     onSearchQueryChange = { title -> viewModel.changeTitleQuery(title) },
                     onCancelClicked = {
                         viewModel.stopSearching()
                         viewModel.changeTitleQuery("")
                         viewModel.search()
-                    }
+                    },
+                    primaryColor = primaryColor,
+                    secondaryColor = secondaryColor,
                 )
             } else {
                 MangaScreenTopBar(
                     text = "Manga Search",
-                    modifier = modifier,
                     scrollBehavior = scrollBehavior,
-                    backgroundColor = backgroundColor,
+                    secondaryColor = secondaryColor,
                     onSearchClick = { viewModel.startSearching() }
                 )
             }
@@ -121,41 +124,46 @@ fun MangaScreen(
             FloatingActionButton(
                 content = {
                     Icon(
-                        painterResource(id = R.drawable.filter_icon),
+                        painterResource(R.drawable.filter_icon),
                         contentDescription = "",
-                        tint = Color.Black,
+                        tint = secondaryColor,
                     )
                 },
                 onClick = {
                     viewModel.openSheet()
                 },
-                containerColor = Color.Cyan
+                containerColor = primaryColor
             )
         },
-        modifier = Modifier.background(backgroundColor)
+        modifier = Modifier.background(secondaryColor)
     ) { paddingValues ->
         Box(
             modifier = modifier
                 .padding(paddingValues)
                 .fillMaxSize()
-                .background(backgroundColor)
+                .background(secondaryColor)
         ) {
             when (val currentState = viewModel.mangaUiState) {
                 is MangaUiState.Loading -> LoadingScreen(modifier = modifier.fillMaxSize())
-                is MangaUiState.Success ->  {
-                    if(currentState.manga.isNotEmpty()) {
+                is MangaUiState.Success -> {
+                    if (currentState.manga.isNotEmpty()) {
                         MangaGridScreen(
                             currentState.manga, modifier = modifier
                                 .fillMaxWidth()
                                 .nestedScroll(scrollBehavior.nestedScrollConnection),
-                            loadMore = loadMore,
+                            loadMore = {
+                                if (viewModel.mangaSearchState.offset < viewModel.mangaSearchState.total) {
+                                    viewModel.loadMoreManga()
+                                }
+                            },
                             onMangaClick = onMangaClick,
-                            backgroundColor = backgroundColor
+                            secondaryColor = secondaryColor
                         )
                     } else {
-                        Text(text = stringResource(R.string.no_manga),
+                        Text(
+                            text = stringResource(R.string.no_manga),
                             fontSize = 25.sp,
-                            color = Color.White,
+                            color = primaryColor,
                             modifier = Modifier.align(Alignment.Center),
                             textAlign = TextAlign.Center
                         )
@@ -163,7 +171,10 @@ fun MangaScreen(
                 }
 
 
-                is MangaUiState.Error -> ErrorScreen(modifier = modifier.fillMaxSize())
+                is MangaUiState.Error -> ErrorScreen(
+                    modifier = modifier.fillMaxSize(),
+                    onReloadClick = { viewModel.reload() }
+                )
             }
         }
 
@@ -205,7 +216,7 @@ fun MangaGridScreen(
     modifier: Modifier = Modifier,
     lazyGridState: LazyGridState = rememberLazyGridState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
-    backgroundColor: Color,
+    secondaryColor: Color = Color.Black,
     loadMore: () -> Unit,
     onMangaClick: (Manga) -> Unit
 ) {
@@ -219,15 +230,16 @@ fun MangaGridScreen(
         columns = GridCells.Fixed(2),
         modifier = modifier
             .padding(horizontal = 4.dp)
-            .background(backgroundColor),
+            .background(secondaryColor),
         state = lazyGridState,
         contentPadding = contentPadding,
     ) {
         items(items = mangaList, key = { manga -> manga.id }
-        ) { mangaCover ->
+        ) { manga ->
             MangaCard(
-                manga = mangaCover,
+                manga = manga,
                 onMangaClick = onMangaClick,
+                secondaryColor = secondaryColor,
                 modifier = modifier
                     .padding(4.dp)
                     .fillMaxHeight()
@@ -240,6 +252,7 @@ fun MangaGridScreen(
 @Composable
 fun MangaCard(
     manga: Manga,
+    secondaryColor: Color = Color.Black,
     onMangaClick: (Manga) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -258,8 +271,16 @@ fun MangaCard(
                     .data(coverLink)
                     .crossfade(true)
                     .build(),
-                error = painterResource(R.drawable.ic_launcher_background),
-                placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
+                error = if(secondaryColor == Color.Black) {
+                    painterResource(R.drawable.white_error_outline)
+                } else {
+                    painterResource(R.drawable.error_outline)
+                },
+                placeholder = if(secondaryColor == Color.Black) {
+                    painterResource(R.drawable.white_cloud_queue)
+                } else {
+                    painterResource(R.drawable.cloud_queue)
+                },
                 contentScale = ContentScale.Crop,
                 contentDescription = "cover",
                 modifier = Modifier.fillMaxHeight()
@@ -291,21 +312,52 @@ fun MangaCard(
 }
 
 @Composable
-fun LoadingScreen(modifier: Modifier = Modifier) {
-    Image(
-        modifier = modifier.size(200.dp),
-        painter = painterResource(R.drawable.ic_launcher_foreground),
-        contentDescription = stringResource(R.string.loading)
-    )
+fun LoadingScreen(
+    modifier: Modifier = Modifier,
+    primaryColor: Color = Color.White,
+    secondaryColor: Color = Color.Black,
+    trackColor: Color = Color.DarkGray,
+) {
+    Box(modifier = modifier
+        .fillMaxSize()
+        .background(secondaryColor)) {
+        CircularProgressIndicator(
+            modifier = Modifier
+                .width(64.dp)
+                .align(Alignment.Center),
+            color = primaryColor,
+            trackColor = trackColor,
+        )
+    }
 }
 
 @Composable
-fun ErrorScreen(modifier: Modifier = Modifier) {
+fun ErrorScreen(
+    modifier: Modifier = Modifier,
+    text: String = stringResource(R.string.error),
+    primaryColor: Color = Color.White,
+    secondaryColor: Color = Color.Black,
+    onReloadClick: () -> Unit
+) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
     ) {
-        Text(text = "Error", fontSize = 30.sp, color = Color.White)
+        Column {
+            Text(text = text,
+                fontSize = 25.sp,
+                color = primaryColor,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+            Button(
+                onClick = onReloadClick,
+                colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Text(text = stringResource(R.string.reload), color = secondaryColor, )
+            }
+        }
+
     }
 }
 
@@ -314,16 +366,17 @@ fun ErrorScreen(modifier: Modifier = Modifier) {
 fun MangaScreenTopBar(
     text: String,
     scrollBehavior: TopAppBarScrollBehavior,
-    backgroundColor: Color,
     onSearchClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    primaryColor: Color = Color.White,
+    secondaryColor: Color = Color.Black,
 ) {
     CenterAlignedTopAppBar(
         scrollBehavior = scrollBehavior,
         title = {
             Text(
                 text = text,
-                color = Color.White,
+                color = primaryColor,
                 style = MaterialTheme.typography.headlineSmall,
             )
         },
@@ -331,14 +384,14 @@ fun MangaScreenTopBar(
             IconButton(onClick = onSearchClick) {
                 Icon(
                     imageVector = Icons.Filled.Search,
-                    tint = Color.White,
-                    contentDescription = "Search",
+                    tint = primaryColor,
+                    contentDescription = stringResource(R.string.search),
                     modifier = Modifier
                 )
             }
         },
         modifier = modifier,
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = backgroundColor)
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = secondaryColor)
     )
 }
 
@@ -347,11 +400,12 @@ fun MangaScreenTopBar(
 fun MangaSearchBar(
     scrollBehavior: TopAppBarScrollBehavior,
     searchQuery: String,
-    backgroundColor: Color,
     onSearchQueryChange: (String) -> Unit,
     onSearchClicked: () -> Unit,
     onCancelClicked: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    primaryColor: Color = Color.White,
+    secondaryColor: Color = Color.Black,
 ) {
     val controller = LocalSoftwareKeyboardController.current
     CenterAlignedTopAppBar(
@@ -360,7 +414,7 @@ fun MangaSearchBar(
                 value = searchQuery,
                 onValueChange = { onSearchQueryChange(it) },
                 modifier = Modifier.fillMaxWidth(),
-                textStyle = TextStyle(color = Color.White),
+                textStyle = TextStyle(color = primaryColor),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = {
                     onSearchClicked()
@@ -370,8 +424,8 @@ fun MangaSearchBar(
         },
         actions = {
             Icon(imageVector = Icons.Filled.Close,
-                tint = Color.White,
-                contentDescription = "Cancel",
+                tint = primaryColor,
+                contentDescription = stringResource(R.string.cancel),
                 modifier = Modifier
                     .size(30.dp)
                     .align(Alignment.CenterVertically)
@@ -380,8 +434,8 @@ fun MangaSearchBar(
         },
         navigationIcon = {
             Icon(imageVector = Icons.Filled.Search,
-                tint = Color.White,
-                contentDescription = "Search",
+                tint = primaryColor,
+                contentDescription = stringResource(R.string.search),
                 modifier = Modifier
                     .size(30.dp)
                     .clickable {
@@ -392,7 +446,7 @@ fun MangaSearchBar(
         },
         scrollBehavior = scrollBehavior,
         modifier = modifier,
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = backgroundColor)
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = secondaryColor)
     )
 }
 
@@ -400,7 +454,12 @@ fun MangaSearchBar(
 @Composable
 fun FilterBottomSheet(
     sheetState: SheetState,
+    onFilterClick: () -> Unit,
+    onResetClick: () -> Unit,
+    onDismissRequest: () -> Unit,
+
     tagState: Map<String, TagState>,
+    onTagClick: (String?) -> Unit,
     lazyColumnState: LazyListState = rememberLazyListState(),
 
     orderState: OrderState,
@@ -409,10 +468,8 @@ fun FilterBottomSheet(
     onOrderItemClick: (String) -> Unit,
     onOrderGloballyPositioned: (LayoutCoordinates) -> Unit,
 
-    onFilterClick: () -> Unit,
-    onResetClick: () -> Unit,
-    onTagClick: (String?) -> Unit,
-    onDismissRequest: () -> Unit
+    primaryColor: Color = Color.White,
+    secondaryColor: Color = Color.Black
 ) {
     ModalBottomSheet(
         sheetState = sheetState,
@@ -420,9 +477,13 @@ fun FilterBottomSheet(
         dragHandle = {
             FilterDragHandle(
                 onFilterClick = onFilterClick,
-                onResetClick = onResetClick
+                onResetClick = onResetClick,
+                primaryColor = primaryColor,
+                secondaryColor = secondaryColor
             )
         },
+        containerColor = secondaryColor,
+        contentColor = primaryColor,
         modifier = Modifier
     ) {
         LazyColumn(
@@ -438,7 +499,8 @@ fun FilterBottomSheet(
                     onExpandIconClick = onExpandIconClick,
                     onOrderDismissRequest = onOrderDismissRequest,
                     onOrderItemClick = onOrderItemClick,
-                    onOrderGloballyPositioned = onOrderGloballyPositioned
+                    onOrderGloballyPositioned = onOrderGloballyPositioned,
+                    primaryColor = primaryColor
                 )
             }
             items(tagState.toList()) { tag ->
@@ -449,33 +511,10 @@ fun FilterBottomSheet(
                         .clickable { onTagClick(tag.second.mangaTag.attributes.name["en"]) },
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    when (tagState[tag.first]?.tagSelectionStatus) {
-                        TagSelectionStatus.Included -> Icon(
-                            painter = painterResource(id = R.drawable.checked_box),
-                            contentDescription = "",
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        )
-
-                        TagSelectionStatus.Excluded -> Icon(
-                            painter = painterResource(id = R.drawable.excluded_box),
-                            contentDescription = "",
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        )
-
-                        TagSelectionStatus.Unselected -> Icon(
-                            painter = painterResource(id = R.drawable.blank_box),
-                            contentDescription = "",
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        )
-
-                        else -> {}
-                    }
-                    Text(
-                        text = tag.first,
-                        fontSize = 15.sp,
-                        modifier = Modifier
-                            .align(Alignment.CenterVertically)
-                            .padding(start = 5.dp)
+                    TagRow(
+                        tagSelectionStatus = tagState[tag.first]?.tagSelectionStatus,
+                        tagName = tag.first,
+                        modifier = Modifier.align(Alignment.CenterVertically)
                     )
                 }
             }
@@ -485,6 +524,8 @@ fun FilterBottomSheet(
 
 @Composable
 fun FilterDragHandle(
+    primaryColor: Color,
+    secondaryColor: Color,
     onResetClick: () -> Unit,
     onFilterClick: () -> Unit,
 ) {
@@ -498,17 +539,19 @@ fun FilterDragHandle(
         Button(
             onClick = { onResetClick() },
             shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.height(35.dp)
+            modifier = Modifier.height(35.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = secondaryColor)
         ) {
-            Text(text = "Reset")
+            Text(text = "Reset", color = primaryColor)
         }
 
         Button(
             onClick = { onFilterClick() },
             shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.height(35.dp)
+            modifier = Modifier.height(35.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
         ) {
-            Text(text = "Filter")
+            Text(text = "Filter", color = secondaryColor)
         }
     }
 }
@@ -516,6 +559,7 @@ fun FilterDragHandle(
 @Composable
 fun OrderDropDownMenu(
     expanded: Boolean,
+    primaryColor: Color,
     list: List<String>,
     selectedItem: String,
     textFiledSize: Size,
@@ -553,15 +597,17 @@ fun OrderDropDownMenu(
                     Icon(
                         icon,
                         contentDescription = "",
-                        modifier = Modifier.clickable { onExpandIconClick() }
+                        modifier = Modifier.clickable { onExpandIconClick() },
+                        tint = primaryColor
                     )
                 },
-                readOnly = true
+                readOnly = true,
+                textStyle = TextStyle(color = primaryColor)
             )
 
             DropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { onOrderDismissRequest() /*expanded = false*/ },
+                onDismissRequest = { onOrderDismissRequest() },
                 modifier = Modifier.width(with(LocalDensity.current) { textFiledSize.width.toDp() })
             ) {
                 list.forEach { label ->
@@ -579,7 +625,50 @@ fun OrderDropDownMenu(
     }
 }
 
+@Composable
+fun TagRow(
+    tagSelectionStatus: TagSelectionStatus?,
+    tagName: String,
+    modifier: Modifier = Modifier
+) {
+    when (tagSelectionStatus) {
+        TagSelectionStatus.Included -> Icon(
+            painter = painterResource(id = R.drawable.checked_box),
+            contentDescription = "",
+            modifier = modifier
+        )
+
+        TagSelectionStatus.Excluded -> Icon(
+            painter = painterResource(id = R.drawable.excluded_box),
+            contentDescription = "",
+            modifier = modifier
+        )
+
+        TagSelectionStatus.Unselected -> Icon(
+            painter = painterResource(id = R.drawable.blank_box),
+            contentDescription = "",
+            modifier = modifier
+        )
+
+        else -> {}
+    }
+    Text(
+        text = tagName,
+        fontSize = 15.sp,
+        modifier = modifier
+            .padding(start = 5.dp)
+    )
+}
+
 internal fun LazyGridState.reachedBottom(buffer: Int = 1): Boolean {
     val lastVisibleItem = this.layoutInfo.visibleItemsInfo.lastOrNull()
     return lastVisibleItem?.index != 0 && lastVisibleItem?.index == this.layoutInfo.totalItemsCount - buffer
+}
+
+@Preview
+@Composable
+fun errorPrev() {
+    ErrorScreen {
+
+    }
 }

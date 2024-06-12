@@ -41,11 +41,6 @@ fun MangaApp(
             MangaScreen(
                 viewModel = mangaScreenViewModel,
                 modifier = Modifier,
-                loadMore = {
-                    if (mangaScreenViewModel.mangaSearchState.offset < mangaScreenViewModel.mangaSearchState.total) {
-                        mangaScreenViewModel.loadMoreManga()
-                    }
-                },
                 onMangaClick = { manga ->
                     mangaDetailsViewModel.loadMangaDetails(manga)
                     navController.navigate(MangaAppScreens.MangaDetailsScreen.name)
@@ -54,7 +49,8 @@ fun MangaApp(
         }
 
         composable(route = MangaAppScreens.MangaDetailsScreen.name) {
-            MangaDetailsScreen(mangaDetailsViewModel = mangaDetailsViewModel,
+            MangaDetailsScreen(
+                mangaDetailsViewModel = mangaDetailsViewModel,
                 onClickBack = {
                     navController.navigateUp()
                     mangaDetailsViewModel.mangaDetailsLeave()
@@ -64,7 +60,7 @@ fun MangaApp(
                     navController.navigate(MangaAppScreens.ChapterReaderScreen.name)
 
                 }
-            ) /* TODO uncomment when screen done */
+            )
         }
 
         composable(route = MangaAppScreens.ChapterReaderScreen.name) {
